@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "./zimtour-store"
+import { toNllbCode } from "./nllbLangCodes"
 
 /**
  * Modular Shona STT (whisper-small-shona) & TTS (sna-f5-tts) & Puter.js TTS Router
@@ -7,6 +8,7 @@ import type { SupportedLanguage } from "./zimtour-store"
 
 const STT_URL = "/api/stt"
 const TTS_URL = "/api/tts"
+
 
 // ── WebM → WAV conversion (libsndfile on server can't read webm) ──
 
@@ -182,3 +184,283 @@ export function startMicRecording(): Promise<RecorderHandle> {
     }
   })
 }
+
+// ── NLLB Language Code Helper ──
+
+export function toNllbLangCode(code: string): string {
+  return toNllbCode(code)
+}
+
+
+// ── Modal NLLB Translation API ──
+
+export async function translateText(
+  text: string,
+  sourceLang = "en",
+  targetLang = "sn"
+): Promise<string> {
+  const src = toNllbLangCode(sourceLang)
+  const tgt = toNllbLangCode(targetLang)
+
+  const res = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      source_lang: src,
+      target_lang: tgt,
+    }),
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Translation ${res.status}: ${errText}`)
+  }
+
+  const data = await res.json()
+  return data.translated_text || data.text || ""
+}
+
+// ── Web Audio Gapless Speech Player ──
+
+export class GaplessSpeechPlayer {
+  private audioContext: AudioContext | null = null
+  private nextStartTime = 0
+  private queue: Promise<void> = Promise.resolve()
+  private activeSources: AudioBufferSourceNode[] = []
+  private isStopped = false
+  private pendingCount = 0
+  private onAllDone: (() => void) | null = null
+
+  setOnAllDone(cb: () => void) {
+    this.onAllDone = cb
+  }
+
+  private getContext(): AudioContext {
+    if (!this.audioContext || this.audioContext.state === "closed") {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+      this.audioContext = new AudioCtx()
+    }
+    return this.audioContext
+  }
+
+  /** Prime/unlock AudioContext during a real user gesture event (click, toggle, touch) */
+  async primeFromGesture(): Promise<void> {
+    try {
+      const ctx = this.getContext()
+      if (ctx.state === "suspended") {
+        await ctx.resume()
+      }
+      console.log("[GaplessSpeechPlayer] AudioContext state after gesture prime:", ctx.state)
+    } catch (err) {
+      console.warn("[GaplessSpeechPlayer] Failed to prime AudioContext:", err)
+    }
+  }
+
+  /** Call synchronously inside user gesture click handler to guarantee AudioContext activation */
+  ensureContextResumed() {
+    try {
+      const ctx = this.getContext()
+      if (ctx.state === "suspended") {
+        ctx.resume().catch((err) => console.warn("[GaplessSpeechPlayer] AudioContext resume failed:", err))
+      }
+    } catch (err) {
+      console.warn("[GaplessSpeechPlayer] AudioContext initialization failed:", err)
+    }
+  }
+
+  async resume() {
+    this.ensureContextResumed()
+  }
+
+  reset() {
+    this.stopAll()
+    this.isStopped = false
+    this.pendingCount = 0
+    this.ensureContextResumed()
+    const ctx = this.getContext()
+    this.nextStartTime = ctx.currentTime
+    this.queue = Promise.resolve()
+  }
+
+  stopAll() {
+    this.isStopped = true
+    this.pendingCount = 0
+    for (const src of this.activeSources) {
+      try {
+        src.stop()
+        src.disconnect()
+      } catch {}
+    }
+    this.activeSources = []
+  }
+
+  enqueueBase64Mp3(base64: string) {
+    if (this.isStopped) return
+    this.pendingCount++
+    this.queue = this.queue.then(() => this._decodeAndSchedule(base64))
+  }
+
+  private async _decodeAndSchedule(base64: string) {
+    if (this.isStopped) return
+    try {
+      const ctx = this.getContext()
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+
+      // decodeAudioData consumes array buffer, so pass a copy
+      const audioBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0))
+      if (this.isStopped) return
+
+      const source = ctx.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(ctx.destination)
+
+      const startAt = Math.max(this.nextStartTime, ctx.currentTime)
+      source.start(startAt)
+      this.activeSources.push(source)
+
+      source.onended = () => {
+        const idx = this.activeSources.indexOf(source)
+        if (idx !== -1) this.activeSources.splice(idx, 1)
+      }
+
+      this.nextStartTime = startAt + audioBuffer.duration
+    } catch (err) {
+      console.error("[GaplessSpeechPlayer] Failed to decode/play audio chunk:", err)
+    } finally {
+      this.pendingCount--
+      if (this.pendingCount === 0 && !this.isStopped) {
+        this.onAllDone?.()
+      }
+    }
+  }
+
+  async waitForEnd(): Promise<void> {
+    await this.queue
+    if (this.isStopped || !this.audioContext) return
+    const remainingMs = Math.max(0, (this.nextStartTime - this.audioContext.currentTime) * 1000)
+    if (remainingMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remainingMs))
+    }
+  }
+}
+
+
+// Module-level shared singleton speech player (survives HMR in dev via window.__shonaSpeechPlayer)
+let globalSpeechPlayer: GaplessSpeechPlayer | null = null
+
+export function getSharedSpeechPlayer(): GaplessSpeechPlayer {
+  if (typeof window === "undefined") {
+    return new GaplessSpeechPlayer()
+  }
+  const w = window as any
+  if (process.env.NODE_ENV !== "production") {
+    if (!w.__shonaSpeechPlayer) {
+      w.__shonaSpeechPlayer = new GaplessSpeechPlayer()
+    }
+    return w.__shonaSpeechPlayer
+  }
+  if (!globalSpeechPlayer) {
+    globalSpeechPlayer = new GaplessSpeechPlayer()
+  }
+  return globalSpeechPlayer
+}
+
+
+// ── SSE Sentence-Streamed Translate + Gapless Speak ──
+
+export async function speakTranslatedGapless(
+  text: string,
+  opts: {
+    sourceLang?: string
+    targetLang?: string
+    onTranslation?: (translation: string) => void
+    onAudioChunk?: () => void
+    onError?: (err: Error) => void
+    onComplete?: () => void
+  } = {}
+): Promise<{ player: GaplessSpeechPlayer; stop: () => void }> {
+  const player = getSharedSpeechPlayer()
+  // CRITICAL: Ensure AudioContext activation
+  player.ensureContextResumed()
+  player.reset()
+  player.setOnAllDone(() => opts.onComplete?.())
+
+
+  let isCancelled = false
+  const stop = () => {
+    isCancelled = true
+    player.stopAll()
+  }
+
+  const srcLang = toNllbCode(opts.sourceLang ?? "en")
+  const tgtLang = toNllbCode(opts.targetLang ?? "sn")
+
+  const res = await fetch("/api/translate/speak-stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      source_lang: srcLang,
+      target_lang: tgtLang,
+    }),
+  })
+
+  if (!res.ok || !res.body) {
+    const errText = await res.text().catch(() => "Speak stream failed")
+    const err = new Error(errText)
+    opts.onError?.(err)
+    throw err
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ""
+
+  // Stream reading loop
+  ;(async () => {
+    try {
+      while (!isCancelled) {
+        const { done, value } = await reader.read()
+        if (done || isCancelled) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const parts = buffer.split("\n\n")
+        buffer = parts.pop() ?? ""
+
+        for (const part of parts) {
+          if (isCancelled) break
+          const trimmed = part.trim()
+          if (!trimmed.startsWith("data: ")) continue
+
+          try {
+            const event = JSON.parse(trimmed.slice(6))
+            if (event.type === "translation") {
+              opts.onTranslation?.(event.text)
+            } else if (event.type === "audio_chunk") {
+              console.log("[SSE] audio_chunk received, index:", event.index, "bytes(b64):", event.data?.length, "enqueueFn:", typeof player.enqueueBase64Mp3)
+              player.enqueueBase64Mp3(event.data)
+              opts.onAudioChunk?.()
+            }
+
+
+          } catch (err) {
+            console.warn("Failed parsing SSE chunk:", err, trimmed)
+          }
+        }
+      }
+    } catch (err: any) {
+      if (!isCancelled) {
+        console.error("Error reading speak-stream:", err)
+        opts.onError?.(err)
+      }
+    }
+  })()
+
+  return { player, stop }
+}
+

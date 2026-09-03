@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+export const maxDuration = 300
+
 const TTS_URL = `${
   process.env.TTS_BASE_URL ??
-  "https://liveforever2022unlimited--shona-f5-tts-server-fastapi-app.modal.run/v1"
+  process.env.SHONA_VOICE_PIPELINE_URL ??
+  "https://liveforever2022unlimited--shona-unified-voice-pipeline-f-fbb20d.modal.run/v1"
 }/audio/speech`
 
 export async function POST(req: NextRequest) {
