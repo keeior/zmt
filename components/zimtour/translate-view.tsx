@@ -29,6 +29,7 @@ import {
   type RecorderHandle,
 } from "@/lib/shona-speech"
 import { useShonaTranslate } from "@/hooks/useShonaTranslate"
+import { ModalVoiceTranslator } from "./modal-voice-translator"
 
 const LANGUAGES = [
   { code: "en", name: "English 🇬🇧" },
@@ -64,6 +65,7 @@ export function TranslateView() {
   const [sourceLang, setSourceLang] = useState("en")
   const [targetLang, setTargetLang] = useState("sn")
   const [copied, setCopied] = useState(false)
+  const [isLiveModalOpen, setIsLiveModalOpen] = useState(false)
 
   // Shona STT state
   const [isRecording, setIsRecording] = useState(false)
@@ -99,7 +101,7 @@ export function TranslateView() {
     if (speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop()
-      } catch {}
+      } catch { }
       speechRecognitionRef.current = null
     }
     setIsWebSpeechListening(false)
@@ -322,14 +324,24 @@ export function TranslateView() {
           </div>
         </div>
 
-        <button
-          onClick={openGoogleTranslateWebview}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-900 to-brand-800 px-4 py-2 text-xs font-extrabold text-white shadow-md hover:brightness-110 transition active:scale-95 shrink-0"
-        >
-          <Globe className="h-4 w-4 text-amber-300" />
-          <span>Launch Google Translate Web</span>
-          <ExternalLink className="h-3.5 w-3.5 opacity-80" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setIsLiveModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-amber-600 to-amber-500 px-4 py-2 text-xs font-extrabold text-white shadow-md hover:brightness-110 transition active:scale-95 cursor-pointer"
+          >
+            <Radio className="h-4 w-4 text-white animate-pulse" />
+            <span>Go Live</span>
+          </button>
+
+          <button
+            onClick={openGoogleTranslateWebview}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-900 to-brand-800 px-4 py-2 text-xs font-extrabold text-white shadow-md hover:brightness-110 transition active:scale-95 shrink-0"
+          >
+            <Globe className="h-4 w-4 text-amber-300" />
+            <span>Launch Google Translate Web</span>
+            <ExternalLink className="h-3.5 w-3.5 opacity-80" />
+          </button>
+        </div>
       </div>
 
       {/* Main Translator Box */}
@@ -410,13 +422,12 @@ export function TranslateView() {
                   <button
                     onClick={handleMicToggle}
                     disabled={isTranscribing}
-                    className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
-                      isActiveRecording
+                    className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${isActiveRecording
                         ? "bg-red-500 text-white animate-pulse"
                         : isTranscribing
                           ? "bg-amber-500 text-white"
                           : "bg-muted text-muted-foreground hover:bg-brand-50 hover:text-brand-700"
-                    }`}
+                      }`}
                   >
                     {isTranscribing ? (
                       <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Transcribing...</>
@@ -505,11 +516,10 @@ export function TranslateView() {
                 <button
                   onClick={() => handleShonaSpeak(translatedText)}
                   disabled={!translatedText || isSpeakingSingle || isStreamingSpeak}
-                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-2xs ${
-                    isSpeakingSingle
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-2xs ${isSpeakingSingle
                       ? "bg-amber-600 text-white"
                       : "bg-brand-900 text-white hover:bg-brand-800 disabled:opacity-40"
-                  }`}
+                    }`}
                 >
                   {isSpeakingSingle ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Speaking...</>
@@ -558,6 +568,11 @@ export function TranslateView() {
           ))}
         </div>
       </div>
+
+      <ModalVoiceTranslator
+        isOpen={isLiveModalOpen}
+        onClose={() => setIsLiveModalOpen(false)}
+      />
     </div>
   )
 }

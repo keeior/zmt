@@ -31,6 +31,7 @@ import {
   Volume2,
   VolumeX,
   PhoneOff,
+  PhoneCall,
   Radio,
   Activity,
   Square,
@@ -43,6 +44,7 @@ import { queryGeminiLiveAI, streamGeminiLiveAI, detectToolIntent, type ChatHisto
 import { useZimTourStore, LANGUAGE_OPTIONS, setSelectedLanguage } from "@/lib/zimtour-store"
 import type { View } from "./types"
 import type { PlaceDetail, IndigenousStory, BookingRecord, ReviewItem } from "@/lib/zimtour-api"
+import { ModalVoiceCallDialog } from "./modal-voice-call-dialog"
 
 type Msg = {
   role: "user" | "ai"
@@ -132,6 +134,7 @@ export function AIView({ onNavigate }: { onNavigate: (v: View) => void }) {
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isModalCallOpen, setIsModalCallOpen] = useState(false)
 
   // ── GEMINI 3.1 LIVE AUDIO CALL STATE ──
   const [isLiveCallActive, setIsLiveCallActive] = useState(false)
@@ -536,6 +539,14 @@ export function AIView({ onNavigate }: { onNavigate: (v: View) => void }) {
                 ))}
               </select>
             </div>
+
+            <button
+              onClick={() => setIsModalCallOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-[12px] font-bold text-white shadow-xs transition hover:bg-emerald-500 active:scale-95 cursor-pointer"
+            >
+              <PhoneCall className="h-3.5 w-3.5 animate-pulse" />
+              <span>AI Voice Call</span>
+            </button>
 
             <button
               onClick={() =>
@@ -993,8 +1004,16 @@ export function AIView({ onNavigate }: { onNavigate: (v: View) => void }) {
               )}
             </button>
             <button
+              onClick={() => setIsModalCallOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-white transition shadow-2xs cursor-pointer shrink-0"
+              title="Open Modal Shona AI Voice Call Dialog"
+            >
+              <PhoneCall className="h-3.5 w-3.5 animate-pulse" />
+              <span className="hidden sm:inline">Call AI</span>
+            </button>
+            <button
               onClick={() => send(input)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-900 text-white transition hover:bg-brand-800"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-900 text-white transition hover:bg-brand-800 shrink-0"
             >
               <Send className="h-3.5 w-3.5" />
             </button>
@@ -1005,6 +1024,11 @@ export function AIView({ onNavigate }: { onNavigate: (v: View) => void }) {
         </div>
       </div>
 
+      {/* Modal Shona AI Voice Call Dialog */}
+      <ModalVoiceCallDialog
+        isOpen={isModalCallOpen}
+        onClose={() => setIsModalCallOpen(false)}
+      />
     </div>
   )
 }
