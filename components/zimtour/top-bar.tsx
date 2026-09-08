@@ -9,7 +9,7 @@ const VIEW_TITLES: Record<View, string> = {
   auth: "Welcome to ZimTour",
   home: "Home",
   explore: "Explore",
-  ai: "AI Assistant",
+  ai: "ZimTour AI",
   bookings: "My Bookings",
   settings: "Settings",
   listing: "Great Zimbabwe",

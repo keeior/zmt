@@ -4,32 +4,27 @@ import { useEffect, useRef, useState } from "react"
 import {
   Home,
   Compass,
-  MessageSquare,
-  CalendarDays,
+  Bot,
+  CalendarCheck2,
   Heart,
   Info,
   ChevronDown,
-  ChevronUp,
-  LayoutDashboard,
   Settings,
+  LayoutDashboard,
   Building2,
-  ListPlus,
-  Receipt,
+  CalendarDays,
   ShieldCheck,
-  Briefcase,
-  Layers,
   Languages,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useZimTourStore } from "@/lib/zimtour-store"
-import { BrandLockup } from "./logo"
 import type { View } from "./types"
 
 const NAV_TOURIST: { id: View; label: string; icon: typeof Home }[] = [
   { id: "home", label: "Home", icon: Home },
   { id: "explore", label: "Explore", icon: Compass },
-  { id: "ai", label: "AI Assistant", icon: MessageSquare },
-  { id: "bookings", label: "Bookings", icon: CalendarDays },
+  { id: "ai", label: "ZimTour AI", icon: Bot },
+  { id: "bookings", label: "Bookings", icon: CalendarCheck2 },
   { id: "translate", label: "Live Translator", icon: Languages },
 ]
 
@@ -75,107 +70,125 @@ export function Sidebar({
   }, [])
 
   return (
-    <aside className="flex h-full w-[182px] shrink-0 flex-col overflow-y-auto bg-gradient-to-b from-brand-950 to-brand-900 px-3 py-5 text-sidebar-foreground">
-      <div className="px-1">
-        <BrandLockup />
-        <p className="mt-3 mb-5 text-[12px] leading-relaxed text-brand-500/80">
-          Discover more. Stay longer. Experience Zimbabwe.
-        </p>
-      </div>
+    <aside className="w-64 bg-[#032e1e] text-slate-300 flex flex-col justify-between shrink-0 border-r border-[#04422b] select-none h-full">
+      <div className="p-5 flex flex-col h-full overflow-y-auto">
+        {/* Brand Logo Header */}
+        <div className="flex items-center gap-3 px-2 mb-6">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-emerald-300 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-emerald-950/40 ring-1 ring-white/20 shrink-0">
+            <Compass className="w-5 h-5 text-emerald-950" />
+          </div>
+          <div>
+            <div className="font-bold text-base tracking-tight text-white flex items-center gap-1.5 leading-none">
+              ZimTour
+              <span className="text-[9px] uppercase tracking-widest font-extrabold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                AI
+              </span>
+            </div>
+            <p className="text-[11px] text-emerald-400/80 font-medium tracking-wide mt-0.5">
+              INTELLIGENCE
+            </p>
+          </div>
+        </div>
 
-      {/* Primary nav */}
-      <nav className="flex flex-col gap-0.5">
-        {navItems.map((item, idx) => {
-          const Icon = item.icon
-          const isActive = active === item.id && (isProvider ? idx === 0 : true)
-          return (
-            <button
-              key={`${item.id}-${item.label}`}
-              onClick={() => onNavigate(item.id)}
-              className={cn(
-                "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13.5px] font-medium transition-colors",
-                isActive
-                  ? "bg-brand-700/80 font-semibold text-white"
-                  : "text-brand-100/75 hover:bg-white/[0.06] hover:text-white",
-              )}
-            >
-              <Icon
+        {/* Brand Sub-tagline */}
+        <div className="px-2 mb-6">
+          <p className="text-[12px] leading-relaxed text-emerald-100/60 font-normal">
+            Discover more. Stay longer. Experience Zimbabwe.
+          </p>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="space-y-1 text-sm font-medium">
+          {navItems.map((item, idx) => {
+            const Icon = item.icon
+            const isActive = active === item.id && (isProvider ? idx === 0 : true)
+            return (
+              <button
+                key={`${item.id}-${item.label}`}
+                onClick={() => onNavigate(item.id)}
                 className={cn(
-                  "h-[17px] w-[17px] shrink-0",
-                  isActive ? "opacity-100 text-emerald-400" : "opacity-75",
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left text-sm font-medium",
+                  isActive
+                    ? "bg-emerald-600 text-white font-semibold shadow-sm shadow-emerald-950/20"
+                    : "text-slate-300 hover:text-white hover:bg-white/5",
                 )}
-              />
-              <span className="flex-1 truncate">{item.label}</span>
-              {"badge" in item && Boolean(item.badge) && (
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10.5px] font-extrabold text-emerald-300 border border-emerald-500/30">
-                  {String(item.badge)}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </nav>
+              >
+                <Icon
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    isActive ? "text-white" : "text-emerald-400/70",
+                  )}
+                />
+                <span className="flex-1 truncate">{item.label}</span>
+                {"badge" in item && Boolean(item.badge) && (
+                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-400 border border-emerald-500/30">
+                    {String(item.badge)}
+                  </span>
+                )}
+              </button>
+            )
+          })}
 
-      {/* Divider */}
-      <div className="mx-3 my-3 border-t border-white/10" />
+          {/* Divider */}
+          <div className="my-3 border-t border-white/10" />
 
-      {/* Secondary nav */}
-      <nav className="flex flex-col gap-0.5">
-        {secondaryNavItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <button
-              key={item.label}
-              onClick={() => onNavigate(item.id)}
-              className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13.5px] font-medium text-brand-100/65 transition-colors hover:bg-white/[0.06] hover:text-white"
-            >
-              <Icon className="h-[17px] w-[17px] shrink-0 opacity-70" />
-              {item.label}
-            </button>
-          )
-        })}
-      </nav>
+          {/* Secondary Nav Links */}
+          {secondaryNavItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.label}
+                onClick={() => onNavigate(item.id)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left text-sm font-medium"
+              >
+                <Icon className="w-4 h-4 text-emerald-400/70 shrink-0" />
+                <span className="flex-1 truncate">{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
 
-      {/* Bottom section: User menu only */}
-      <div className="mt-auto pt-3">
-        <div ref={boxRef} className="relative border-t border-white/10 pt-3">
+        {/* Sidebar Bottom: User Profile */}
+        <div className="mt-auto pt-4 border-t border-white/10 relative" ref={boxRef}>
           {menuOpen && (
-            <div className="absolute bottom-14 left-1 right-1 rounded-[10px] bg-white p-1.5 text-foreground shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+            <div className="absolute bottom-16 left-0 right-0 rounded-xl bg-[#04422b] border border-white/10 p-1 text-white shadow-xl z-50">
               <button
                 onClick={() => {
                   onNavigate("settings")
                   setMenuOpen(false)
                 }}
-                className="block w-full rounded-md px-2.5 py-2 text-left text-[13px] text-muted-foreground hover:bg-brand-50 hover:text-brand-700"
+                className="block w-full rounded-lg px-3 py-2 text-left text-xs text-slate-200 hover:bg-white/10 transition"
               >
-                View profile
+                View Profile & Settings
               </button>
               <button
                 onClick={() => {
                   onNavigate("auth")
                   setMenuOpen(false)
                 }}
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] font-semibold text-brand-700 hover:bg-brand-50"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-emerald-300 hover:bg-white/10 transition"
               >
-                <Compass className="h-3.5 w-3.5" />
+                <Compass className="w-3.5 h-3.5" />
                 Switch User Role
               </button>
-              <button
-                onClick={() => {
-                  onNavigate("settings")
-                  setMenuOpen(false)
-                }}
-                className="block w-full rounded-md px-2.5 py-2 text-left text-[13px] text-muted-foreground hover:bg-brand-50 hover:text-brand-700"
-              >
-                Settings
-              </button>
-              <div className="my-1 border-t border-border" />
+              {onAdminClick && (
+                <button
+                  onClick={() => {
+                    onAdminClick()
+                    setMenuOpen(false)
+                  }}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-xs text-amber-300 hover:bg-white/10 transition font-semibold"
+                >
+                  Ministry Intelligence Mode
+                </button>
+              )}
+              <div className="my-1 border-t border-white/10" />
               <button
                 onClick={() => {
                   onNavigate("auth")
                   setMenuOpen(false)
                 }}
-                className="block w-full rounded-md px-2.5 py-2 text-left text-[13px] text-muted-foreground hover:bg-brand-50 hover:text-brand-700"
+                className="block w-full rounded-lg px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/10 transition"
               >
                 Log out / Switch User
               </button>
@@ -183,24 +196,18 @@ export function Sidebar({
           )}
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex w-full items-center gap-2 rounded-[10px] p-1.5 text-left transition-colors hover:bg-white/[0.06]"
+            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-white/5 text-left transition-all"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3c7a5b] text-[12px] font-bold text-white">
-              T
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block truncate text-[13px] font-semibold text-white">
-                Tawanda
-              </span>
-              <span className="block truncate text-[10.5px] text-brand-500/75">
-                tawanda@example.com
-              </span>
-            </span>
-            {menuOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 shrink-0 text-brand-100/50" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-brand-100/50" />
-            )}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white font-semibold flex items-center justify-center text-xs ring-2 ring-emerald-500/30 shrink-0">
+                T
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-semibold text-white truncate">Tawanda</p>
+                <p className="text-[11px] text-slate-400 truncate">tawanda@example.com</p>
+              </div>
+            </div>
+            <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform shrink-0", menuOpen && "rotate-180")} />
           </button>
         </div>
       </div>

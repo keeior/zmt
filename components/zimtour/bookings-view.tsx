@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   CheckCircle2,
   Clock,
@@ -28,9 +28,16 @@ type Tab = (typeof TABS)[number]
 
 export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) {
   const [tab, setTab] = useState<Tab>("Upcoming")
+  const [allBookings, setAllBookings] = useState<BookingRecord[]>(() => apiGetAllBookings())
 
-  // Live bookings from MASTER_BOOKINGS (includes AI agent & manual bookings)
-  const allBookings = apiGetAllBookings()
+  // Listen for new bookings created dynamically by AI agent or user
+  useEffect(() => {
+    function handleBookingCreated() {
+      setAllBookings(apiGetAllBookings())
+    }
+    window.addEventListener("zimtour_booking_created", handleBookingCreated)
+    return () => window.removeEventListener("zimtour_booking_created", handleBookingCreated)
+  }, [])
 
   const upcoming = useMemo(() => allBookings.filter((b) => b.status === "Confirmed"), [allBookings])
   const completed = useMemo(() => allBookings.filter((b) => b.status === "Completed"), [allBookings])

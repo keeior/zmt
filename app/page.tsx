@@ -19,6 +19,8 @@ import { FullScreenMapModal } from "@/components/zimtour/full-screen-map-modal"
 import { setSelectedPlaceId, setUserRole } from "@/lib/zimtour-store"
 import type { View } from "@/components/zimtour/types"
 
+import { cn } from "@/lib/utils"
+
 export default function Page() {
   const [view, setView] = useState<View>("auth")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -101,33 +103,36 @@ export default function Page() {
             onOpenLocationMap={() => setIsLocationMapOpen(true)}
           />
         )}
-        <main className="flex-1 overflow-y-auto">
+        <main className={cn("flex-1 overflow-y-auto flex flex-col", view === "ai" && "overflow-hidden")}>
           {view === "auth" && <AuthView onNavigate={setView} />}
-          <div className="mx-auto max-w-[1280px] px-5 py-6 lg:px-8">
-            {view === "home" && (
-              <HomeView
-                onNavigate={setView}
-                onOpenListing={() => setView("listing")}
-              />
-            )}
-            {view === "explore" && (
-              <ExploreView
-                onNavigate={setView}
-                onOpenListing={() => setView("listing")}
-                onOpenLocationMap={() => setIsLocationMapOpen(true)}
-              />
-            )}
-            {view === "listing" && <ListingView onNavigate={setView} />}
-            {view === "ai" && <AIView onNavigate={setView} />}
-            {view === "bookings" && <BookingsView onNavigate={setView} />}
-            {view === "settings" && <SettingsView onNavigate={setView} />}
-            {view === "admin" && <AdminView onNavigate={setView} />}
-            {(view === "provider" || view.startsWith("provider-")) && (
-              <ProviderView activeSubView={view} onNavigate={setView} />
-            )}
-            {view === "contributor" && <ContributorView onNavigate={setView} />}
-            {view === "translate" && <TranslateView />}
-          </div>
+          {view === "ai" ? (
+            <AIView onNavigate={setView} />
+          ) : (
+            <div className="mx-auto max-w-[1280px] px-5 py-6 lg:px-8 w-full flex-1">
+              {view === "home" && (
+                <HomeView
+                  onNavigate={setView}
+                  onOpenListing={() => setView("listing")}
+                />
+              )}
+              {view === "explore" && (
+                <ExploreView
+                  onNavigate={setView}
+                  onOpenListing={() => setView("listing")}
+                  onOpenLocationMap={() => setIsLocationMapOpen(true)}
+                />
+              )}
+              {view === "listing" && <ListingView onNavigate={setView} />}
+              {view === "bookings" && <BookingsView onNavigate={setView} />}
+              {view === "settings" && <SettingsView onNavigate={setView} />}
+              {view === "admin" && <AdminView onNavigate={setView} />}
+              {(view === "provider" || view.startsWith("provider-")) && (
+                <ProviderView activeSubView={view} onNavigate={setView} />
+              )}
+              {view === "contributor" && <ContributorView onNavigate={setView} />}
+              {view === "translate" && <TranslateView />}
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -197,6 +197,44 @@ export const MASTER_DATASET: PlaceDetail[] = [
     indigenousNarrative: INDIGENOUS_CULTURAL_STORIES[0],
   },
   {
+    id: "tugwi-mukosi",
+    name: "Tugwi–Mukosi Dam & Ruins",
+    category: "Places",
+    subCategory: "Heritage & Lake Ruins",
+    location: "Masvingo South",
+    distanceKm: 28,
+    lat: -20.6500,
+    lng: 30.9000,
+    rating: 4.7,
+    reviews: 75,
+    seed: "tugwimukosi",
+    imageUrl: img("tugwimukosi", 800, 500),
+    desc: "Ancient city ruins with rich Shona history, combined with Zimbabwe's largest inland dam reservoir offering breathtaking mountain views and boating.",
+    entryPrice: "USD 8",
+    tags: ["Ruins", "Lake", "Heritage", "Boating"],
+    accessibility: {
+      mobility: "good",
+      visual: true,
+      hearing: true,
+      sensory: true,
+      facilities: true,
+      parking: true,
+      terrain: "Easy hiking trails & lakeside road",
+      lastVerified: "Today",
+    },
+    reviewsList: [
+      {
+        id: "tm1",
+        author: "Simbarashe Chitepo",
+        rating: 5,
+        date: "2 days ago",
+        comment: "Spectacular landscape where ancient heritage meets modern water engineering. Magnificent views over the dam wall!",
+        avatar: "SC",
+        verified: true,
+      },
+    ],
+  },
+  {
     id: "singita-pamushana",
     name: "Singita Pamushana Lodge",
     category: "Stay",
@@ -2165,9 +2203,9 @@ export function apiAddNewListing(input: NewListingInput): PlaceDetail {
 }
 
 /**
- * Initial stored platform bookings
+ * Initial stored platform bookings with localStorage backing
  */
-export const MASTER_BOOKINGS: BookingRecord[] = [
+export const INITIAL_BOOKINGS: BookingRecord[] = [
   {
     id: "bk-1001",
     placeId: "gz-hotel",
@@ -2227,6 +2265,35 @@ export const MASTER_BOOKINGS: BookingRecord[] = [
   },
 ]
 
+export let MASTER_BOOKINGS: BookingRecord[] = INITIAL_BOOKINGS
+
+// Helper to load persisted bookings on client
+function loadPersistedBookings(): BookingRecord[] {
+  if (typeof window === "undefined") return INITIAL_BOOKINGS
+  try {
+    const raw = localStorage.getItem("zimtour_bookings_v1")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed
+      }
+    }
+  } catch {}
+  return INITIAL_BOOKINGS
+}
+
+function saveBookings(bookings: BookingRecord[]) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem("zimtour_bookings_v1", JSON.stringify(bookings))
+  } catch {}
+}
+
+// Initialize on client load if browser
+if (typeof window !== "undefined") {
+  MASTER_BOOKINGS = loadPersistedBookings()
+}
+
 /**
  * Create a new booking with automatic 3% platform commission retention
  */
@@ -2268,10 +2335,19 @@ export function apiCreateBooking(input: {
   }
 
   MASTER_BOOKINGS.unshift(record)
+  saveBookings(MASTER_BOOKINGS)
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("zimtour_booking_created", { detail: record }))
+  }
+
   return record
 }
 
 export function apiGetAllBookings(): BookingRecord[] {
+  if (typeof window !== "undefined") {
+    MASTER_BOOKINGS = loadPersistedBookings()
+  }
   return MASTER_BOOKINGS
 }
 
