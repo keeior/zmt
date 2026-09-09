@@ -114,37 +114,53 @@
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0c1410;
+  --foreground: #eafaf0;
+  --card: #111f18;
+  --card-foreground: #eafaf0;
+  --popover: #111f18;
+  --popover-foreground: #eafaf0;
+  --primary: #2fae63;
+  --primary-foreground: #0c1410;
+  --secondary: #162d20;
+  --secondary-foreground: #eafaf0;
+  --muted: #162d20;
+  --muted-foreground: #7da890;
+  --accent: #1a3826;
+  --accent-foreground: #eafaf0;
+  --destructive: #c1543a;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #1f9c53;
+  --chart-1: #2fae63;
+  --chart-2: #a78bfa;
+  --chart-3: #e8a33d;
+  --chart-4: #60a5fa;
+  --chart-5: #1f9c53;
+
+  --brand-950: #071a10;
+  --brand-900: #0a2416;
+  --brand-800: #0f3520;
+  --brand-700: #1a7a45;
+  --brand-600: #2fae63;
+  --brand-500: #3fd374;
+  --brand-100: #1a3826;
+  --brand-50: #162d20;
+  --amber-soft: #3a2a10;
+  --amber-ink: #e8a33d;
+  --violet-soft: #2a1f3a;
+  --violet-ink: #a78bfa;
+  --blue-soft: #1a2a3a;
+  --sky-live: #2fae63;
+
+  --sidebar: #0a1a12;
+  --sidebar-foreground: #eafaf0;
+  --sidebar-primary: #2fae63;
+  --sidebar-primary-foreground: #0c1410;
+  --sidebar-accent: #162d20;
+  --sidebar-accent-foreground: #eafaf0;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #1f9c53;
 }
 
 @layer base {

@@ -14,3 +14,4 @@ export type View =
   | "provider-verification"
   | "contributor"
   | "translate"
+  | "about"

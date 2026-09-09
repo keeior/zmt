@@ -528,12 +528,40 @@ export function getPlaceReviews(placeId: string): ReviewItem[] {
 
 export type UserRole = "tourist" | "provider" | "contributor" | "authority"
 
+export type AIPreferences = {
+  travelStyle: "cultural" | "adventure" | "relaxation" | "wildlife" | "family"
+  dietaryRequirement: "none" | "halal" | "vegetarian" | "vegan" | "local-shona"
+  aiTone: "concise" | "detailed" | "storyteller"
+  interests: string[]
+  customContext: string
+}
+
+export type PlannedRouteStop = {
+  placeId: string
+  placeName: string
+  lat: number
+  lng: number
+  order: number
+  estimatedDriveMinutes?: number
+}
+
+export type PlannedRoute = {
+  id: string
+  title: string
+  stops: PlannedRouteStop[]
+  totalDistanceKm: number
+  totalDriveMinutes: number
+  createdAt: string
+}
+
 export type StoreState = {
   selectedRangeKm: 30 | 60
   selectedLanguage: SupportedLanguage
   activeAccessibilityProfiles: AccessProfile[]
   selectedPlaceId: string
   aiContextPrompt: string | null
+  aiPreferences: AIPreferences
+  plannedRoute: PlannedRoute | null
   userRole: UserRole
   providerVerified: boolean
   verifiedCategory: string | null
@@ -549,8 +577,8 @@ export type StoreState = {
   recentActivities: { id: string; text: string; time: string }[]
   
   // Node Drill Down State
-  selectedNode: string | null // "Masvingo", "Victoria Falls", etc.
-  drillDownPath: string[] // e.g. ["Zimbabwe", "Masvingo", "Great Zimbabwe", "Cultural Experiences"]
+  selectedNode: string | null
+  drillDownPath: string[]
 }
 
 let globalState: StoreState = {
@@ -559,6 +587,14 @@ let globalState: StoreState = {
   activeAccessibilityProfiles: [],
   selectedPlaceId: "great-zimbabwe",
   aiContextPrompt: null,
+  aiPreferences: {
+    travelStyle: "cultural",
+    dietaryRequirement: "local-shona",
+    aiTone: "storyteller",
+    interests: ["History & Stone Ruins", "UNESCO Heritage", "Local Crafts & Arts", "Wildlife Safaris"],
+    customContext: "Prefers authentic cultural immersion and verified local guides in Masvingo & Matobo.",
+  },
+  plannedRoute: null,
   userRole: "tourist",
   providerVerified: false,
   verifiedCategory: "places",
@@ -596,6 +632,17 @@ function emit() {
 }
 
 /* ── Actions ── */
+
+export function setAIPreferences(prefs: Partial<AIPreferences>) {
+  globalState = {
+    ...globalState,
+    aiPreferences: {
+      ...globalState.aiPreferences,
+      ...prefs,
+    },
+  }
+  emit()
+}
 
 export function setSelectedLanguage(lang: SupportedLanguage) {
   globalState = { ...globalState, selectedLanguage: lang }
@@ -679,6 +726,16 @@ export function setSelectedNode(nodeName: string | null) {
 
 export function setDrillDownPath(path: string[]) {
   globalState = { ...globalState, drillDownPath: path }
+  emit()
+}
+
+export function setPlannedRoute(route: PlannedRoute) {
+  globalState = { ...globalState, plannedRoute: route }
+  emit()
+}
+
+export function clearPlannedRoute() {
+  globalState = { ...globalState, plannedRoute: null }
   emit()
 }
 

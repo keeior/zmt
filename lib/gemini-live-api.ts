@@ -8,7 +8,8 @@ import {
   type ReviewItem,
   apiCreateBooking,
 } from "./zimtour-api"
-import type { SupportedLanguage } from "./zimtour-store"
+import type { SupportedLanguage, PlannedRoute, PlannedRouteStop } from "./zimtour-store"
+import { setPlannedRoute } from "./zimtour-store"
 import {
   type TravellerMemory,
   loadMemory,
@@ -62,6 +63,7 @@ export type ToolCallResult =
   | { tool: "place_booking"; result: BookingRecord }
   | { tool: "get_place_details"; result: PlaceDetail }
   | { tool: "get_reviews"; placeName: string; results: ReviewItem[] }
+  | { tool: "plan_route"; route: PlannedRoute }
 
 // ── Contextual reference resolution ──
 
@@ -192,6 +194,24 @@ export function detectToolIntent(
     }
   }
 
+  // ── ROUTE / ITINERARY / DIRECTIONS intent ──
+  if (/(route|itinerary|driving|directions?|road\s*trip|day\s*trip|drive\s*to|plan.*trip|drive.*between|travel.*plan|how\s+to\s+get)/i.test(q)) {
+    // Collect mentioned place IDs
+    const mentionedPlaces: PlaceDetail[] = []
+    for (const p of MASTER_DATASET) {
+      if (q.includes(p.name.toLowerCase())) {
+        mentionedPlaces.push(p)
+      } else {
+        const words = p.name.toLowerCase().split(/\s+/).filter((w) => w.length > 3)
+        if (words.length >= 2 && words.filter((w) => q.includes(w)).length >= 2) {
+          mentionedPlaces.push(p)
+        }
+      }
+    }
+    // Default route: top 4 nearby places if no specific places mentioned
+    return { toolName: "plan_route", args: { placeIds: mentionedPlaces.map((p) => p.id) } }
+  }
+
   // ── ACCESSIBILITY intent ──
   if (/(wheelchair|accessib|disability|ramp)/i.test(q)) {
     return { toolName: "search_places", args: { accessibilityFeature: "full" } }
@@ -273,6 +293,65 @@ export function executeToolCall(intent: { toolName: string; args: Record<string,
     case "get_reviews": {
       const place = MASTER_DATASET.find((p) => p.id === intent.args.placeId) || MASTER_DATASET[0]
       return { tool: "get_reviews", placeName: place.name, results: (place.reviewsList || []).slice(0, MAX_DISPLAY) }
+    }
+
+    case "plan_route": {
+      let routePlaces: PlaceDetail[] = []
+      if (intent.args.placeIds?.length > 0) {
+        routePlaces = intent.args.placeIds
+          .map((id: string) => MASTER_DATASET.find((p) => p.id === id))
+          .filter(Boolean) as PlaceDetail[]
+      }
+      // If fewer than 2 places, auto-pick top nearby ones
+      if (routePlaces.length < 2) {
+        const nearby = MASTER_DATASET
+          .map((p) => {
+            const dist = location
+              ? Math.round(haversineKm(location.lat, location.lng, p.lat, p.lng) * 10) / 10
+              : p.distanceKm
+            return { ...p, computedDist: dist }
+          })
+          .sort((a, b) => a.computedDist - b.computedDist)
+          .slice(0, 5)
+        routePlaces = nearby
+      }
+
+      // Build route stops with estimated drive times
+      const stops: PlannedRouteStop[] = routePlaces.map((p, i) => {
+        const prevPlace = i > 0 ? routePlaces[i - 1] : null
+        const driveMinutes = prevPlace
+          ? Math.round(haversineKm(prevPlace.lat, prevPlace.lng, p.lat, p.lng) * 1.3) // ~1.3 min/km rough estimate
+          : 0
+        return {
+          placeId: p.id,
+          placeName: p.name,
+          lat: p.lat,
+          lng: p.lng,
+          order: i + 1,
+          estimatedDriveMinutes: driveMinutes,
+        }
+      })
+
+      let totalKm = 0
+      for (let i = 1; i < routePlaces.length; i++) {
+        totalKm += haversineKm(routePlaces[i - 1].lat, routePlaces[i - 1].lng, routePlaces[i].lat, routePlaces[i].lng)
+      }
+
+      const route: PlannedRoute = {
+        id: `route-${Date.now()}`,
+        title: routePlaces.length <= 3
+          ? routePlaces.map((p) => p.name.split(" ").slice(0, 2).join(" ")).join(" → ")
+          : `${routePlaces.length}-Stop Zimbabwe Tour`,
+        stops,
+        totalDistanceKm: Math.round(totalKm * 10) / 10,
+        totalDriveMinutes: stops.reduce((s, st) => s + (st.estimatedDriveMinutes || 0), 0),
+        createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }
+
+      // Persist to store so the full-screen map renders it
+      setPlannedRoute(route)
+
+      return { tool: "plan_route", route }
     }
 
     default:
@@ -374,6 +453,9 @@ function toolResultsToContext(results: ToolCallResult[]): string {
       chunks.push(`Place details retrieved: ${r.result.name}.`)
     } else if (r.tool === "get_reviews") {
       chunks.push(`${r.results.length} review(s) found for ${r.placeName}. Reviews: ${r.results.map((rv) => `"${rv.comment}" — ${rv.author} (${rv.rating}/5)`).join("; ")}`)
+    } else if (r.tool === "plan_route") {
+      const rt = r.route
+      chunks.push(`Driving route planned: "${rt.title}" with ${rt.stops.length} stops. Total distance: ${rt.totalDistanceKm} km (~${rt.totalDriveMinutes} min drive). Stops: ${rt.stops.map((s) => `${s.order}. ${s.placeName}`).join(", ")}`)
     }
   }
   return chunks.length
@@ -404,23 +486,46 @@ export async function streamGeminiLiveAI(
   onAck?.("Thinking…")
 
   let memory: TravellerMemory = loadMemory(userId)
+  const storeState = (await import("./zimtour-store")).getZimTourStore()
+  const aiPrefs = storeState.aiPreferences
 
   // Detect intent WITH chat history for contextual resolution
   const intent = detectToolIntent(userQuery, location || undefined, history)
 
-  let langInstruction = ""
-  if (language === "shona") {
-    langInstruction = "Reply in Shona (ChiShona) with warm Zimbabwean hospitality. "
-  } else if (language === "spanish") {
-    langInstruction = "Respond clearly in Spanish. "
-  } else if (language === "english") {
-    langInstruction = "Respond in clear English. "
+  // Explicit set language instruction for the AI
+  const langLabels: Record<string, string> = {
+    shona: "Shona (ChiShona)",
+    english: "English",
+    spanish: "Spanish",
+    french: "French",
+    ndebele: "Ndebele (IsiNdebele)",
+    mandarin: "Mandarin Chinese",
   }
+  const targetLangLabel = langLabels[language] || language
+  const langInstruction = `The user's set language is strictly ${targetLangLabel}. ALWAYS reply in ${targetLangLabel} with warm Zimbabwean hospitality unless explicitly requested otherwise. `
+
+  // AI Preferences & Memory prompt context
+  let aiPrefsContext = ""
+  if (aiPrefs) {
+    aiPrefsContext = `User Preferences & Persona Context: [Travel Style: ${aiPrefs.travelStyle}, Cuisine/Diet: ${aiPrefs.dietaryRequirement}, Preferred AI Tone: ${aiPrefs.aiTone}, Key Interests: ${aiPrefs.interests.join(", ")}, Extra Notes: ${aiPrefs.customContext}]. Use this context to tailor your responses to the user's explicit profile! `
+  }
+
+  // GPS Location context
+  let locationContext = ""
+  if (location) {
+    const nearbyCount = MASTER_DATASET.filter(
+      (p) => haversineKm(location.lat, location.lng, p.lat, p.lng) <= 30
+    ).length
+    locationContext = `Current User GPS Location: (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}) with ${nearbyCount} verified destinations within 30km. `
+  }
+
+  const contextRule =
+    "When answering queries that depend on location, distance, activities, or recommendations, proactively check and reference the user's location, interests, and travel context before giving deep responses. "
 
   // ═══ Phase A: No tools needed → pure conversational stream ═══
   if (!intent) {
     const memoryContext = memoryToPromptContext(memory)
-    const systemPrompt = [BASE_SYSTEM_PROMPT, langInstruction, memoryContext].filter(Boolean).join(" ")
+    const systemPrompt = [BASE_SYSTEM_PROMPT, langInstruction, aiPrefsContext, locationContext, memoryContext, contextRule].filter(Boolean).join(" ")
     const reply = await streamFromGroq(systemPrompt, history, userQuery, onChunk)
     memory = extractSignalsFromQuery(memory, userQuery)
     memory.lastLanguage = language
@@ -472,7 +577,7 @@ export async function streamGeminiLiveAI(
 
   const memoryContext = memoryToPromptContext(memory)
   const grounding = toolResultsToContext(toolResults)
-  const systemPrompt = [BASE_SYSTEM_PROMPT, langInstruction, memoryContext, grounding].filter(Boolean).join(" ")
+  const systemPrompt = [BASE_SYSTEM_PROMPT, langInstruction, aiPrefsContext, locationContext, memoryContext, contextRule, grounding].filter(Boolean).join(" ")
 
   const finalReply = await streamFromGroq(systemPrompt, history, userQuery, onChunk)
 

@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from "react"
 import {
   CheckCircle2,
-  Clock,
   CalendarCheck,
   Wallet,
   Ticket,
@@ -11,11 +10,11 @@ import {
   Download,
   Calendar,
   XCircle,
-  MapPin,
   Users,
   CreditCard,
   Hash,
   Sparkles,
+  ExternalLink,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { apiGetAllBookings, type BookingRecord, MASTER_DATASET } from "@/lib/zimtour-api"
@@ -30,7 +29,6 @@ export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
   const [tab, setTab] = useState<Tab>("Upcoming")
   const [allBookings, setAllBookings] = useState<BookingRecord[]>(() => apiGetAllBookings())
 
-  // Listen for new bookings created dynamically by AI agent or user
   useEffect(() => {
     function handleBookingCreated() {
       setAllBookings(apiGetAllBookings())
@@ -46,19 +44,32 @@ export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
   const tabBookings: BookingRecord[] =
     tab === "Upcoming" ? upcoming : tab === "Completed" ? completed : cancelled
 
-  // Dynamic stats
   const totalSpent = useMemo(
     () => allBookings.reduce((sum, b) => sum + b.totalAmountUSD, 0),
     [allBookings],
   )
 
   const STATS = [
-    { icon: Ticket, label: "Active bookings", value: String(upcoming.length), bg: "bg-brand-50 text-brand-700" },
-    { icon: CalendarCheck, label: "Trips completed", value: String(completed.length), bg: "bg-blue-50 text-blue-700" },
-    { icon: Wallet, label: "Total spent", value: `USD ${totalSpent.toLocaleString()}`, bg: "bg-amber-50 text-amber-700" },
+    {
+      icon: Ticket,
+      label: "Active Bookings",
+      value: String(upcoming.length),
+      color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    },
+    {
+      icon: CalendarCheck,
+      label: "Trips Completed",
+      value: String(completed.length),
+      color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    },
+    {
+      icon: Wallet,
+      label: "Total Spent",
+      value: `USD $${totalSpent.toLocaleString()}`,
+      color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    },
   ]
 
-  // Resolve place image from MASTER_DATASET seed/imageUrl
   function resolveImage(b: BookingRecord): string {
     const place = MASTER_DATASET.find((p) => p.id === b.placeId)
     return place?.imageUrl || img(b.placeId)
@@ -70,129 +81,136 @@ export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
   }
 
   return (
-    <div className="space-y-5">
-      {/* Stats row */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="space-y-4 animate-in fade-in duration-200 pb-8">
+      {/* ── Ultra-Thin Compact Stats Bar ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {STATS.map((s) => {
           const Icon = s.icon
           return (
             <div
               key={s.label}
-              className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-4 shadow-xs"
+              className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5 shadow-2xs transition hover:border-emerald-500/30"
             >
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-bold ${s.bg}`}>
-                <Icon className="h-5 w-5" />
-              </span>
-              <div>
-                <div className="text-[22px] font-extrabold leading-none text-foreground">
-                  {s.value}
+              <div className="flex items-center gap-2.5">
+                <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg border", s.color)}>
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="mt-1 text-[12px] font-medium text-muted-foreground">
-                  {s.label}
-                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{s.label}</span>
               </div>
+              <span className="text-sm font-extrabold text-foreground tracking-tight">{s.value}</span>
             </div>
           )
         })}
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border gap-1">
-        {TABS.map((t) => {
-          const count = t === "Upcoming" ? upcoming.length : t === "Completed" ? completed.length : cancelled.length
-          return (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                "-mb-px border-b-2 px-4 py-2.5 text-[13.5px] font-semibold transition-colors inline-flex items-center gap-1.5",
-                tab === t
-                  ? "border-brand-800 text-brand-900 font-bold"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t}
-              {count > 0 && (
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                    tab === t ? "bg-brand-100 text-brand-800" : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          )
-        })}
+      {/* ── Sleek Thin Tabs Header ── */}
+      <div className="flex items-center justify-between border-b border-border pb-1">
+        <div className="flex gap-1">
+          {TABS.map((t) => {
+            const count = t === "Upcoming" ? upcoming.length : t === "Completed" ? completed.length : cancelled.length
+            const isSelected = tab === t
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "relative px-3.5 py-1.5 text-xs font-bold transition-all rounded-lg inline-flex items-center gap-1.5 cursor-pointer",
+                  isSelected
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {t}
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.2 text-[10px] font-extrabold",
+                      isSelected
+                        ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Booking list */}
+      {/* ── Ultra-Thin Booking Item Rows ── */}
       {tabBookings.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {tabBookings.map((b) => (
             <div
               key={b.id}
-              className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-xs transition hover:shadow-md sm:flex-row sm:items-center cursor-pointer group"
               onClick={() => handleOpenPlaceDetails(b.placeId)}
+              className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-2.5 shadow-2xs transition hover:border-emerald-500/40 hover:bg-muted/30 cursor-pointer group"
             >
-              {/* Thumbnail */}
+              {/* Compact Thumbnail */}
               <div
-                className="h-[100px] w-full shrink-0 rounded-lg bg-cover bg-center sm:w-[140px] group-hover:opacity-90 transition"
+                className="h-14 w-20 shrink-0 rounded-lg bg-cover bg-center border border-border/50 group-hover:scale-102 transition-transform"
                 style={{ backgroundImage: `url('${resolveImage(b)}')` }}
               />
 
-              {/* Details */}
-              <div className="flex-1 min-w-0">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h4 className="text-[15px] font-bold text-foreground truncate group-hover:text-brand-800 transition">
-                    {b.placeName}
-                  </h4>
-                  <StatusBadge status={b.status} />
+              {/* Middle Information Row */}
+              <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[1fr_auto] items-center gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-extrabold text-foreground truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                      {b.placeName}
+                    </h4>
+                    <StatusBadge status={b.status} />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-3 w-3 text-emerald-500 shrink-0" />
+                      {b.bookingDate}
+                    </span>
+                    <span>·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="h-3 w-3 text-emerald-500 shrink-0" />
+                      {b.guests} guest{b.guests > 1 ? "s" : ""}
+                    </span>
+                    <span>·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <CreditCard className="h-3 w-3 text-emerald-500 shrink-0" />
+                      {b.paymentMethod}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-[12px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-brand-600 shrink-0" />
-                    {b.bookingDate}
+                {/* Pricing & Confirmation */}
+                <div className="flex items-center sm:flex-col sm:items-end gap-2 sm:gap-0.5">
+                  <span className="text-xs font-black text-foreground">
+                    USD ${b.totalAmountUSD.toLocaleString()}
                   </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5 text-brand-600 shrink-0" />
-                    {b.guests} guest{b.guests > 1 ? "s" : ""}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <CreditCard className="h-3.5 w-3.5 text-brand-600 shrink-0" />
-                    {b.paymentMethod}
-                  </span>
-                </div>
-
-                <div className="mt-2.5 flex items-center gap-3">
-                  <span className="text-[14px] font-extrabold text-foreground">
-                    USD {b.totalAmountUSD.toLocaleString()}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
-                    <Hash className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground">
+                    <Hash className="h-2.5 w-2.5 text-emerald-500" />
                     {b.confirmationCode}
                   </span>
-                  <span className="text-[10.5px] text-muted-foreground italic">{b.createdAt}</span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex shrink-0 flex-col sm:flex-row gap-2" onClick={(e) => e.stopPropagation()}>
+              {/* Compact Action Buttons */}
+              <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handleOpenPlaceDetails(b.placeId)}
                   className={cn(
-                    "rounded-lg px-4 py-2 text-[12.5px] font-bold transition",
+                    "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition cursor-pointer",
                     b.status === "Confirmed"
-                      ? "bg-brand-900 text-white hover:bg-brand-800"
-                      : "border border-input bg-card text-foreground hover:bg-muted",
+                      ? "bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-700 dark:hover:bg-emerald-600"
+                      : "border border-border bg-card text-foreground hover:bg-muted",
                   )}
                 >
-                  {b.status === "Confirmed" ? "View Details" : "View Trip"}
+                  Details
+                  <ExternalLink className="h-3 w-3" />
                 </button>
-                <button className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-3.5 py-2 text-[12.5px] font-semibold text-foreground transition hover:bg-muted">
-                  <Download className="h-3.5 w-3.5 text-muted-foreground" />
+
+                <button className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] font-bold text-foreground transition hover:bg-muted cursor-pointer">
+                  <Download className="h-3 w-3 text-emerald-500" />
                   Ticket
                 </button>
               </div>
@@ -200,19 +218,19 @@ export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-16 text-center shadow-xs">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <CalendarCheck className="h-6 w-6" />
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-10 text-center shadow-2xs">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+            <CalendarCheck className="h-5 w-5" />
           </span>
-          <b className="mt-3.5 text-[15px] font-bold">No {tab.toLowerCase()} bookings</b>
-          <p className="mt-1 max-w-xs text-[12.5px] text-muted-foreground">
-            When you have {tab.toLowerCase()} trips, they&apos;ll appear here.
+          <b className="mt-2 text-xs font-extrabold text-foreground">No {tab.toLowerCase()} bookings</b>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            When you reserve trips or experiences, they&apos;ll appear here.
           </p>
           <button
             onClick={() => onNavigate("explore")}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-900 px-5 py-2.5 text-[12.5px] font-bold text-white transition hover:bg-brand-800"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 dark:bg-emerald-500 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700 dark:hover:bg-emerald-600 shadow-2xs cursor-pointer"
           >
-            Explore experiences <ChevronRight className="h-3.5 w-3.5" />
+            Explore Experiences <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
@@ -223,23 +241,23 @@ export function BookingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
 function StatusBadge({ status }: { status: BookingRecord["status"] }) {
   if (status === "Confirmed") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[10.5px] font-bold text-brand-700">
-        <CheckCircle2 className="h-3 w-3" />
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
         Confirmed
       </span>
     )
   }
   if (status === "Completed") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10.5px] font-bold text-blue-700">
-        <Sparkles className="h-3 w-3" />
+      <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-[10px] font-extrabold text-blue-600 dark:text-blue-400">
+        <Sparkles className="h-3 w-3 text-blue-500" />
         Completed
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10.5px] font-bold text-red-700">
-      <XCircle className="h-3 w-3" />
+    <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 text-[10px] font-extrabold text-rose-600 dark:text-rose-400">
+      <XCircle className="h-3 w-3 text-rose-500" />
       Cancelled
     </span>
   )

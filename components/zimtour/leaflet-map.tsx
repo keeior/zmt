@@ -20,6 +20,13 @@ export type MapMarker = {
   heatColor?: string
 }
 
+export type RouteWaypoint = {
+  lat: number
+  lng: number
+  label: string
+  order: number
+}
+
 type LeafletMapProps = {
   markers: MapMarker[]
   center: [number, number]
@@ -31,6 +38,7 @@ type LeafletMapProps = {
   previewMode?: "compact" | "expanded"
   variant?: "tourist" | "ministry"
   onMarkerClick?: (id: string) => void
+  routeWaypoints?: RouteWaypoint[]
 }
 
 export function LeafletMap({
@@ -44,10 +52,12 @@ export function LeafletMap({
   previewMode = "compact",
   variant = "tourist",
   onMarkerClick,
+  routeWaypoints,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersLayerRef = useRef<any>(null)
+  const routeLayerRef = useRef<any>(null)
   const leafletLRef = useRef<any>(null)
 
   // Render mobile-game style pins
@@ -217,6 +227,7 @@ export function LeafletMap({
 
       mapInstanceRef.current = map
       markersLayerRef.current = L.layerGroup().addTo(map)
+      routeLayerRef.current = L.layerGroup().addTo(map)
 
       updateMarkers(L, markers)
     }
@@ -239,6 +250,57 @@ export function LeafletMap({
       updateMarkers(leafletLRef.current, markers)
     }
   }, [markers, updateMarkers])
+
+  // ── Draw driving route polyline ──
+  useEffect(() => {
+    if (!routeLayerRef.current || !leafletLRef.current || !routeWaypoints?.length) {
+      routeLayerRef.current?.clearLayers()
+      return
+    }
+    const L = leafletLRef.current
+    routeLayerRef.current.clearLayers()
+
+    const sorted = [...routeWaypoints].sort((a, b) => a.order - b.order)
+    const latlngs = sorted.map((w) => [w.lat, w.lng] as [number, number])
+
+    // Animated dashed route polyline
+    const routeLine = L.polyline(latlngs, {
+      color: "#10b981",
+      weight: 4,
+      opacity: 0.85,
+      dashArray: "10, 8",
+      lineCap: "round",
+      lineJoin: "round",
+    })
+    routeLayerRef.current.addLayer(routeLine)
+
+    // Waypoint number markers
+    sorted.forEach((w, i) => {
+      const stepIcon = L.divIcon({
+        className: "leaflet-zimtour-game-pin",
+        html: `
+          <div class="zt-route-step">
+            <span class="zt-route-step-num">${i + 1}</span>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16],
+      })
+      const marker = L.marker([w.lat, w.lng], { icon: stepIcon })
+      marker.bindTooltip(
+        `<div style="padding:6px 10px;font-size:12px;font-weight:800;color:#fff;background:#0f172a;border-radius:10px;border:1px solid rgba(255,255,255,0.2)">Stop ${i + 1}: ${w.label}</div>`,
+        { direction: "top", offset: [0, -16], className: "zt-leaflet-tooltip-floating zt-tooltip-compact", opacity: 1 }
+      )
+      routeLayerRef.current.addLayer(marker)
+    })
+
+    // Fit map to route bounds
+    if (latlngs.length >= 2 && mapInstanceRef.current) {
+      const bounds = L.latLngBounds(latlngs)
+      mapInstanceRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 })
+    }
+  }, [routeWaypoints])
 
   // Smoothly animate map when center changes
   useEffect(() => {
@@ -679,6 +741,30 @@ export function LeafletMap({
         @keyframes zt-pin-shadow-pulse {
           0%, 100% { transform: scale(1); opacity: 0.4; }
           50% { transform: scale(1.4); opacity: 0.8; }
+        }
+
+        /* Route Step Number Badges */
+        .zt-route-step {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+          border: 2.5px solid #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 3px 10px rgba(16, 185, 129, 0.5);
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+        .zt-route-step:hover {
+          transform: scale(1.2);
+        }
+        .zt-route-step-num {
+          font-size: 13px;
+          font-weight: 900;
+          color: #ffffff;
+          line-height: 1;
         }
       `}</style>
       <div

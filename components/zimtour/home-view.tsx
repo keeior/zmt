@@ -86,7 +86,7 @@ export function HomeView({
           <h2 className="mb-1 text-[22px] font-extrabold leading-tight tracking-tight sm:text-[26px]">
             Discover Zimbabwe with Intelligence
           </h2>
-          <p className="mb-3 max-w-[420px] text-[12.5px] leading-snug text-brand-100/90">
+          <p className="mb-3 max-w-[420px] text-[12.5px] leading-snug text-white/90">
             AI-powered travel insights & real-time discovery near you.
           </p>
 
@@ -116,7 +116,7 @@ export function HomeView({
               onClick={() => setActiveCategoryModal(f)}
               className="group flex items-center gap-2.5 rounded-xl border border-border bg-card p-2.5 text-left shadow-2xs transition hover:border-brand-600 hover:shadow-xs"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 font-bold group-hover:bg-brand-900 group-hover:text-white transition">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold group-hover:bg-brand-900 group-hover:text-white transition">
                 <Icon className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex-1">
@@ -181,13 +181,13 @@ export function HomeView({
         </div>
 
         {/* Promo Row */}
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-brand-50/80 border border-brand-200/60 px-4 py-2 text-[12px] text-brand-950">
-          <span className="font-medium">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[12px] text-foreground shadow-2xs">
+          <span className="font-medium text-foreground">
             Are you a local operator? Join our verified tourism intelligence graph.
           </span>
           <button
             onClick={() => onNavigate("settings")}
-            className="rounded-lg bg-brand-900 px-3 py-1 text-[11.5px] font-bold text-white hover:bg-brand-800 transition"
+            className="rounded-lg bg-brand-900 px-3 py-1 text-[11.5px] font-bold text-white hover:bg-brand-800 transition cursor-pointer"
           >
             List Your Business →
           </button>
@@ -212,7 +212,7 @@ export function HomeView({
                 <div>
                   <h3 className="text-[17px] font-extrabold text-foreground flex items-center gap-2">
                     {activeCategoryModal.title}
-                    <span className="rounded-full bg-brand-50 text-brand-800 text-[11px] font-extrabold px-2.5 py-0.5 border border-brand-200">
+                    <span className="rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-[11px] font-extrabold px-2.5 py-0.5 border border-emerald-500/30">
                       {modalListings.length} verified listings
                     </span>
                   </h3>

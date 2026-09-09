@@ -82,6 +82,7 @@ export function ModalVoiceCallDialog({
   })
 
   const agentTurnActiveRef = useRef(false)
+  const pendingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const speechRecognitionRef = useRef<any>(null)
   const [isSpeechRecognizing, setIsSpeechRecognizing] = useState(false)
 
@@ -218,6 +219,10 @@ export function ModalVoiceCallDialog({
         } catch { }
       }
       stopMicMeter()
+      if (pendingIdleTimerRef.current) {
+        clearTimeout(pendingIdleTimerRef.current)
+        pendingIdleTimerRef.current = null
+      }
       setIsSpeechRecognizing(false)
       setStatus("idle")
       setCaption(null)
@@ -416,10 +421,23 @@ export function ModalVoiceCallDialog({
           break
         }
 
-        case "done":
+        case "done": {
           agentTurnActiveRef.current = false
-          setStatus("idle")
+          // Don't snap to idle while audio is still playing — defer until
+          // the last scheduled buffer has actually finished playback.
+          if (pendingIdleTimerRef.current) clearTimeout(pendingIdleTimerRef.current)
+          const ctx = playbackCtxRef.current
+          const remaining = ctx ? Math.max(0, nextStartTimeRef.current - ctx.currentTime) : 0
+          if (remaining > 0.05) {
+            pendingIdleTimerRef.current = setTimeout(() => {
+              pendingIdleTimerRef.current = null
+              setStatus("idle")
+            }, remaining * 1000 + 150) // +150ms safety margin
+          } else {
+            setStatus("idle")
+          }
           break
+        }
 
         default:
           break
@@ -438,6 +456,10 @@ export function ModalVoiceCallDialog({
       agentTurnSentencesRef.current = []
       lastRevealedSentenceIdxRef.current = null
       setActiveSentenceIdx(null)
+      if (pendingIdleTimerRef.current) {
+        clearTimeout(pendingIdleTimerRef.current)
+        pendingIdleTimerRef.current = null
+      }
 
       updateCaption(() => ({ role: "you", text }))
 

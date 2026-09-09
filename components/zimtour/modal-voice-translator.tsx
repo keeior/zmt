@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useCallback, useEffect } from "react"
-import { X, ChevronDown, Check, Mic, Volume2, VolumeX } from "lucide-react"
+import { X, ChevronDown, Check, Mic, Volume2, VolumeX, Keyboard, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AgentAudioVisualizerBar } from "@/components/agents-ui/agent-audio-visualizer-bar"
 
@@ -18,6 +18,7 @@ const API_ORIGIN =
 const LANGUAGES = [
   { label: "English", bcp47: "en-US", nllb: "eng_Latn", puterLang: "en-US" },
   { label: "Shona", bcp47: "sn-ZW", nllb: "sna_Latn", puterLang: "sn" },
+  { label: "Mandarin", bcp47: "zh-CN", nllb: "zho_Hans", puterLang: "zh-CN" },
   { label: "Spanish", bcp47: "es-ES", nllb: "spa_Latn", puterLang: "es-ES" },
   { label: "French", bcp47: "fr-FR", nllb: "fra_Latn", puterLang: "fr-FR" },
   { label: "Portuguese", bcp47: "pt-PT", nllb: "por_Latn", puterLang: "pt-PT" },
@@ -172,18 +173,21 @@ const VISUALIZER_STYLE_MAP: Record<CallStatus, { color: `#${string}` }> = {
 const BAR_COUNT = 5
 
 export type ModalVoiceTranslatorProps = {
-  isOpen: boolean
-  onClose: () => void
+  isOpen?: boolean
+  onClose?: () => void
+  inline?: boolean
 }
 
 export type LiveTranslationDialogProps = ModalVoiceTranslatorProps
 
-export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorProps) {
+export function ModalVoiceTranslator({ isOpen = true, onClose, inline = false }: ModalVoiceTranslatorProps) {
   const [status, setStatus] = useState<CallStatus>("idle")
   const [caption, setCaption] = useState<Caption>(null)
   const [error, setError] = useState<string | null>(null)
   const [isMuted, setIsMuted] = useState(false)
   const [volumeBands, setVolumeBands] = useState<number[]>(() => new Array(BAR_COUNT).fill(0))
+  const [showTextInput, setShowTextInput] = useState(false)
+  const [inputText, setInputText] = useState("")
 
   const [sourceLang, setSourceLang] = useState<Language>(LANGUAGES[0])
   const [targetLang, setTargetLang] = useState<Language>(LANGUAGES[1]) // default target: Shona
@@ -679,38 +683,48 @@ export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorPr
   const visualizerStyle = VISUALIZER_STYLE_MAP[status]
   const avgVolume = volumeBands.reduce((a, b) => a + b, 0) / (volumeBands.length || 1)
 
-  const LangPicker = ({
-    label,
-    value,
-    onChange,
-    open,
-    setOpen,
-    pickerRef,
-  }: {
-    label: string
-    value: Language
-    onChange: (l: Language) => void
-    open: boolean
-    setOpen: (v: boolean) => void
-    pickerRef: React.RefObject<HTMLDivElement | null>
-  }) => (
-    <div className="relative" ref={pickerRef}>
+type LangPickerProps = {
+  label: string
+  value: Language
+  onChange: (l: Language) => void
+  open: boolean
+  setOpen: (v: boolean | ((prev: boolean) => boolean)) => void
+  pickerRef: React.RefObject<HTMLDivElement | null>
+}
+
+function LangPicker({
+  label,
+  value,
+  onChange,
+  open,
+  setOpen,
+  pickerRef,
+}: LangPickerProps) {
+  return (
+    <div className="relative z-30" ref={pickerRef}>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-full border border-[#2A2B30] bg-[#111216] px-3 py-1.5 text-xs font-medium text-[#F3F1EA] transition hover:border-[#E8A33D]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
+        }}
+        className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground transition hover:border-emerald-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer shadow-2xs"
       >
-        <span className="text-[#8C8D93]">{label}:</span> {value.label}
-        <ChevronDown className={cn("h-3.5 w-3.5 text-[#8C8D93] transition-transform", open && "rotate-180")} />
+        <span className="text-muted-foreground">{label}:</span> {value.label}
+        <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-10 mt-2 w-40 overflow-hidden rounded-2xl border border-[#2A2B30] bg-[#111216] py-1 shadow-lg shadow-black/40">
+        <div className="absolute left-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground py-1 shadow-xl shadow-black/20">
           {LANGUAGES.map((l) => (
             <button
               key={l.label}
-              onClick={() => { onChange(l); setOpen(false) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onChange(l)
+                setOpen(false)
+              }}
               className={cn(
-                "flex w-full items-center justify-between px-3 py-2 text-left text-xs transition",
-                l.label === value.label ? "text-[#E8A33D]" : "text-[#F3F1EA] hover:bg-[#17181B]"
+                "flex w-full items-center justify-between px-3.5 py-2 text-left text-xs transition cursor-pointer",
+                l.label === value.label ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10" : "text-popover-foreground hover:bg-muted"
               )}
             >
               {l.label}
@@ -721,44 +735,64 @@ export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorPr
       )}
     </div>
   )
+}
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0E0F12] text-[#F3F1EA]">
+    <div
+      className={cn(
+        "flex flex-col text-foreground transition-colors",
+        inline
+          ? "relative w-full h-full flex-1 rounded-2xl border border-border bg-card shadow-sm overflow-hidden py-4 min-h-[520px]"
+          : "fixed inset-0 z-50 bg-background"
+      )}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#F3F1EA]/[0.06] px-6 py-4">
-        <p className="text-sm font-medium">Live translation</p>
-        <button
-          onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[#8C8D93] transition hover:text-[#F3F1EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]"
-        >
-          <X className="h-5 w-5" />
-        </button>
+      <div className="flex items-center justify-between border-b border-border px-6 pb-3.5">
+        <p className="text-sm font-bold flex items-center gap-2 text-foreground">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+          Live Voice Translation Engine
+        </p>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Language and Voice Pickers */}
-      <div className="flex items-center justify-center gap-3 px-6 py-3">
+      <div className="relative z-30 flex flex-wrap items-center justify-center gap-3 px-6 py-3.5 border-b border-border/60 bg-muted/20">
         <LangPicker label="From" value={sourceLang} onChange={setSourceLang} open={sourcePickerOpen} setOpen={setSourcePickerOpen} pickerRef={sourcePickerRef} />
-        <span className="text-[#8C8D93]">&rarr;</span>
+        <span className="text-muted-foreground font-bold">&rarr;</span>
         <LangPicker label="To" value={targetLang} onChange={setTargetLang} open={targetPickerOpen} setOpen={setTargetPickerOpen} pickerRef={targetPickerRef} />
 
-        {/* voice picker applies to BOTH engines */}
-        <div className="relative" ref={voicePickerRef}>
+        {/* Voice Picker */}
+        <div className="relative z-30" ref={voicePickerRef}>
           <button
-            onClick={() => setVoicePickerOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-full border border-[#2A2B30] bg-[#111216] px-3 py-1.5 text-xs font-medium capitalize text-[#F3F1EA] transition hover:border-[#E8A33D]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]"
+            onClick={(e) => {
+              e.stopPropagation()
+              setVoicePickerOpen((v) => !v)
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold capitalize text-foreground transition hover:border-emerald-500/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer shadow-2xs"
           >
             {selectedVoice}
-            <ChevronDown className={cn("h-3.5 w-3.5 text-[#8C8D93] transition-transform", voicePickerOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", voicePickerOpen && "rotate-180")} />
           </button>
           {voicePickerOpen && (
-            <div className="absolute right-0 top-full z-10 mt-2 w-40 overflow-hidden rounded-2xl border border-[#2A2B30] bg-[#111216] py-1 shadow-lg shadow-black/40">
+            <div className="absolute right-0 top-full z-40 mt-2 w-40 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground py-1 shadow-xl shadow-black/20">
               {voices.map((v) => (
                 <button
                   key={v}
-                  onClick={() => { setSelectedVoice(v); setVoicePickerOpen(false) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedVoice(v)
+                    setVoicePickerOpen(false)
+                  }}
                   className={cn(
-                    "flex w-full items-center justify-between px-3 py-2 text-left text-xs capitalize transition",
-                    v === selectedVoice ? "text-[#E8A33D]" : "text-[#F3F1EA] hover:bg-[#17181B]"
+                    "flex w-full items-center justify-between px-3.5 py-2 text-left text-xs capitalize transition cursor-pointer",
+                    v === selectedVoice ? "text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10" : "text-popover-foreground hover:bg-muted"
                   )}
                 >
                   {v}
@@ -769,24 +803,24 @@ export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorPr
           )}
         </div>
 
-        {/* Use Ltrans -- routes every language pair through Groq via the
-            server-side proxy instead of NLLB. Off by default: NLLB is
-            faster and cheaper when it's producing acceptable output; this
-            is for the pairs where it isn't. */}
+        {/* Use Ltrans */}
         <button
-          onClick={() => setUseLtrans((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setUseLtrans((v) => !v)
+          }}
           title="Use Ltrans (Groq LLM translation instead of NLLB)"
           className={cn(
-            "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]",
+            "relative z-30 flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer shadow-2xs",
             useLtrans
-              ? "border-[#E8A33D]/60 bg-[#E8A33D]/10 text-[#E8A33D]"
-              : "border-[#2A2B30] bg-[#111216] text-[#8C8D93] hover:text-[#F3F1EA]"
+              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold"
+              : "border-border bg-card text-muted-foreground hover:text-foreground"
           )}
         >
           <span
             className={cn(
               "h-1.5 w-1.5 rounded-full transition-colors",
-              useLtrans ? "bg-[#E8A33D]" : "bg-[#5C5D63]"
+              useLtrans ? "bg-emerald-500" : "bg-muted-foreground/50"
             )}
           />
           Use Ltrans
@@ -794,17 +828,13 @@ export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorPr
       </div>
 
       {/* Hero Visualizer & Captions */}
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
-        {/* Wide + short, unlike the call dialog's square ring -- deliberately
-            a different silhouette, not just a different component. */}
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6 py-8">
         <div className="relative flex h-28 w-64 items-center justify-center sm:w-80">
-          {/* Horizontal blurred strip, not a circular halo -- shaped to
-              match bars instead of being a leftover ring treatment. */}
           <div
             className="pointer-events-none absolute inset-x-2 top-1/2 h-10 -translate-y-1/2 rounded-full blur-2xl transition-opacity duration-300"
             style={{
               backgroundColor: visualizerStyle.color,
-              opacity: 0.15 + avgVolume * 0.35,
+              opacity: 0.2 + avgVolume * 0.4,
               transform: `translateY(-50%) scaleX(${1 + avgVolume * 0.35})`,
             }}
           />
@@ -820,43 +850,93 @@ export function ModalVoiceTranslator({ isOpen, onClose }: ModalVoiceTranslatorPr
 
         <div className="flex items-center gap-2">
           <span
-            className="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+            className="h-2 w-2 rounded-full transition-colors duration-300"
             style={{ backgroundColor: visualizerStyle.color }}
           />
-          <p className="text-sm text-[#8C8D93]">{statusLabel}</p>
+          <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">{statusLabel}</p>
         </div>
 
         {caption && (
-          <div className="flex w-full max-w-sm flex-col gap-1.5 px-2 text-center">
-            <p className="text-sm text-[#8C8D93]">{caption.source}</p>
-            <p className="text-[17px] font-medium text-[#F3F1EA]">{caption.translated}</p>
+          <div className="flex w-full max-w-lg flex-col gap-1.5 px-4 text-center bg-muted/30 p-4 rounded-2xl border border-border/80 shadow-2xs">
+            <p className="text-xs text-muted-foreground font-medium">{caption.source}</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground leading-snug">{caption.translated}</p>
           </div>
         )}
 
-        {error && <p className="max-w-sm text-center text-sm text-[#C1543A]">{error}</p>}
+        {error && <p className="max-w-sm text-center text-xs font-semibold text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-500/20">{error}</p>}
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col gap-4 px-6 pb-8">
-        <div className="mx-auto flex items-center gap-2 rounded-full border border-[#2A2B30] bg-[#111216]/80 px-3 py-2 backdrop-blur">
+      <div className="flex flex-col gap-4 px-6 pb-8 shrink-0">
+        {showTextInput && (
+          <div className="mx-auto flex w-full max-w-md items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 shadow-md transition-all animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <input
+              autoFocus
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && inputText.trim() && status !== "processing") {
+                  const q = inputText.trim()
+                  setInputText("")
+                  setShowTextInput(false)
+                  runTranslationPipeline(q)
+                }
+              }}
+              placeholder={`Type in ${sourceLang.label}...`}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <button
+              onClick={() => {
+                if (!inputText.trim() || status === "processing") return
+                const q = inputText.trim()
+                setInputText("")
+                setShowTextInput(false)
+                runTranslationPipeline(q)
+              }}
+              disabled={!inputText.trim() || status === "processing"}
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 disabled:opacity-40 cursor-pointer p-1 transition"
+              title="Translate text"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        <div className="mx-auto flex items-center gap-3 rounded-full border border-border bg-card/90 px-4 py-2.5 shadow-md backdrop-blur">
           <button
             onClick={() => setIsMuted((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#8C8D93] transition hover:text-[#F3F1EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
             title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
 
+          <button
+            onClick={() => setShowTextInput((v) => !v)}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer",
+              showTextInput
+                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+            title="Type text"
+          >
+            <Keyboard className="h-5 w-5" />
+          </button>
+
           <div className="relative mx-1">
             {isSpeechRecognizing && !reducedMotion && (
-              <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-[#E8A33D]/30" />
+              <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-emerald-500/30" />
             )}
             <button
               onClick={toggleSpeechRecognition}
               disabled={status === "processing" || status === "speaking"}
               className={cn(
-                "flex h-16 w-16 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D] disabled:opacity-40",
-                isSpeechRecognizing ? "bg-[#E8A33D] text-[#0E0F12]" : "bg-[#17181B] text-[#F3F1EA]"
+                "flex h-16 w-16 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-40 cursor-pointer shadow-md",
+                isSpeechRecognizing
+                  ? "bg-emerald-600 text-white shadow-emerald-600/30 scale-105"
+                  : "bg-brand-900 text-white hover:bg-brand-800"
               )}
               title="Tap to speak"
             >

@@ -15,9 +15,12 @@ import {
   CalendarDays,
   ShieldCheck,
   Languages,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useZimTourStore } from "@/lib/zimtour-store"
+import { useTheme } from "@/hooks/useTheme"
 import type { View } from "./types"
 
 const NAV_TOURIST: { id: View; label: string; icon: typeof Home }[] = [
@@ -36,8 +39,7 @@ const NAV_PROVIDER: { id: View; label: string; icon: typeof Home; badge?: string
 ]
 
 const NAV_SECONDARY: { id: View; label: string; icon: typeof Home }[] = [
-  { id: "settings", label: "Favourites", icon: Heart },
-  { id: "settings", label: "About Zimbabwe", icon: Info },
+  { id: "about", label: "About Zimbabwe", icon: Info },
   { id: "settings", label: "Settings", icon: Settings },
 ]
 
@@ -51,6 +53,7 @@ export function Sidebar({
   onAdminClick?: () => void
 }) {
   const store = useZimTourStore()
+  const { theme, toggleTheme } = useTheme()
   const isProvider = store.userRole === "provider" || active === "provider"
   const navItems = isProvider ? NAV_PROVIDER : NAV_TOURIST
   const secondaryNavItems = isProvider
@@ -135,21 +138,45 @@ export function Sidebar({
           {/* Secondary Nav Links */}
           {secondaryNavItems.map((item) => {
             const Icon = item.icon
+            const isActive = active === item.id
             return (
               <button
                 key={item.label}
                 onClick={() => onNavigate(item.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left text-sm font-medium"
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left text-sm font-medium",
+                  isActive
+                    ? "bg-emerald-600 text-white font-semibold shadow-sm shadow-emerald-950/20"
+                    : "text-slate-300 hover:text-white hover:bg-white/5",
+                )}
               >
-                <Icon className="w-4 h-4 text-emerald-400/70 shrink-0" />
+                <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-white" : "text-emerald-400/70")} />
                 <span className="flex-1 truncate">{item.label}</span>
               </button>
             )
           })}
         </nav>
 
+        {/* Theme Toggle */}
+        <div className="mt-auto pt-4 border-t border-white/10">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors text-left text-sm font-medium"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+            ) : (
+              <Moon className="w-4 h-4 text-emerald-400/70 shrink-0" />
+            )}
+            <span className="flex-1 truncate">
+              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+            </span>
+          </button>
+        </div>
+
         {/* Sidebar Bottom: User Profile */}
-        <div className="mt-auto pt-4 border-t border-white/10 relative" ref={boxRef}>
+        <div className="pt-3 border-t border-white/10 relative" ref={boxRef}>
           {menuOpen && (
             <div className="absolute bottom-16 left-0 right-0 rounded-xl bg-[#04422b] border border-white/10 p-1 text-white shadow-xl z-50">
               <button

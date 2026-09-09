@@ -24,6 +24,24 @@ const IMAGE_MAP: Record<string, string> = {
   "pakoteke2": "/zim/pakoteke_gorge2.jpg.jpeg",
   "zrp-masvingo": "/zim/zrp_masvingo.jpeg",
   "zrp-tourism": "/zim/zrp_tourism.jpg.jpeg",
+  "tugwimukosi": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+  "tugwiruins": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+  "culturalexp": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=800&q=80",
+  "culturalexp2": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=800&q=80",
+  "mushandike": "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=800&q=80",
+  "localfood": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+  "kylepark": "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?auto=format&fit=crop&w=800&q=80",
+  "hotsprings": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+  "mountain": "/zim/nyunipotrait.jpg.jpeg",
+  "birdsanctuary": "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=800&q=80",
+  "basketry": "https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80",
+  "weaving": "https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80",
+  "ngomakurira": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+  "sikatolion": "https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=800&q=80",
+  "chamavaracaves": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+  "chivicaves": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+  "chivizacave": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+  "rockart": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
 
   // ── Distinct Curated Visuals for Accommodations ──
   "lodgeancientcity": "/zim/greatz.jpg.jpeg",
@@ -39,6 +57,7 @@ const IMAGE_MAP: Record<string, string> = {
   "tentedcamp": "/zim/gonarezhou2.jpg.jpeg",
   "urbanbreeze": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
   "bushmanrock": "/zim/malilangwe.jpg.jpeg",
+  "gorgelodge": "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800&q=80",
 
   // ── Things to Do (Tours & Activities) ──
   "boatcruise": "/zim/mutirikwe.jpg.jpeg",
@@ -46,16 +65,16 @@ const IMAGE_MAP: Record<string, string> = {
   "gamedrive": "/zim/gonarezhou.jpg.jpeg",
   "pokotekewalk": "/zim/pakoteke_gorge.jpg.jpeg",
   "drumming": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
-  "photoexp": "/zim/gonarezhou3.jpg.jpeg",
+  "photoexp": "/zim/greatz2.jpg.jpeg",
   "damwalk": "/zim/mutirikwe3.jpg.jpeg",
   "walkingsafari": "/zim/malilangwe2.jpg.jpeg",
-  "thermalbath": "/zim/pakoteke_gorge2.jpg.jpeg",
+  "thermalbath": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
   "mountaintrek": "/zim/nyunipotrait.jpg.jpeg",
   "kayaking": "/zim/mutirikwe2.jpg.jpeg",
   "carving": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80",
 
   // ── Get Around (Car Hire & Travel) ──
-  "carhire": "/zim/malilangwe3.jpg.jpeg",
+  "carhire": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
   "impalacar": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80",
   "shuttlebus": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
   "coach": "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=600&q=80",
@@ -67,7 +86,7 @@ const IMAGE_MAP: Record<string, string> = {
   "hoponshuttle": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
 
   // ── Services (Dining & Shopping) ──
-  "craftmarket": "/zim/greatz.jpg.jpeg",
+  "craftmarket": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
   "chevrondining": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
   "exorstation": "https://images.unsplash.com/photo-1527018606416-a65453770388?auto=format&fit=crop&w=600&q=80",
   "nandos": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
@@ -86,7 +105,7 @@ const IMAGE_MAP: Record<string, string> = {
   "rujekoclinic": "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=600&q=80",
   "psmipharmacy": "https://images.unsplash.com/photo-1586015555751-63c07e0c4b26?auto=format&fit=crop&w=600&q=80",
   "makurirahospital": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80",
-  "marsambulance": "/zim/zrp_tourism.jpg.jpeg",
+  "marsambulance": "https://images.unsplash.com/photo-1587745416684-47953f16f02f?auto=format&fit=crop&w=800&q=80",
 }
 
 export const img = (seed: string, w = 400, h = 300) =>

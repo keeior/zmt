@@ -87,25 +87,25 @@ export function ExploreView({
             <button
               onClick={() => setRangeKm(30)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-extrabold transition",
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-extrabold transition cursor-pointer",
                 store.selectedRangeKm === 30
-                  ? "bg-brand-900 text-white shadow-xs"
+                  ? "bg-emerald-700 text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <MapPin className="h-3.5 w-3.5 text-brand-400" />
+              <MapPin className="h-3.5 w-3.5 text-emerald-300" />
               Within 30 km
             </button>
             <button
               onClick={() => setRangeKm(60)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-extrabold transition",
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-extrabold transition cursor-pointer",
                 store.selectedRangeKm === 60
-                  ? "bg-brand-900 text-white shadow-xs"
+                  ? "bg-emerald-700 text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Navigation className="h-3.5 w-3.5 text-brand-400" />
+              <Navigation className="h-3.5 w-3.5 text-emerald-300" />
               Extended 60 km
             </button>
           </div>
@@ -113,9 +113,9 @@ export function ExploreView({
           {onOpenLocationMap && (
             <button
               onClick={onOpenLocationMap}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-brand-300 bg-brand-50 px-3 py-1.5 text-[12px] font-extrabold text-brand-900 hover:bg-brand-100 transition shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[12px] font-extrabold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/20 transition shadow-2xs cursor-pointer"
             >
-              <Sparkles className="h-3.5 w-3.5 text-brand-700" />
+              <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
               Full Radar Map
             </button>
           )}
@@ -124,7 +124,7 @@ export function ExploreView({
         {/* Right: Accessibility Multi-select Pills */}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[12px] font-bold text-muted-foreground mr-1 flex items-center gap-1">
-            <Accessibility className="h-3.5 w-3.5 text-brand-700" />
+            <Accessibility className="h-3.5 w-3.5 text-emerald-500" />
             Accessibility:
           </span>
           {ACCESSIBILITY_PROFILES.map((prof) => {
@@ -135,15 +135,15 @@ export function ExploreView({
                 key={prof.id}
                 onClick={() => toggleAccessibilityProfile(prof.id)}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11.5px] font-semibold transition",
+                  "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11.5px] font-semibold transition cursor-pointer",
                   isActive
-                    ? "border-brand-700 bg-brand-50 text-brand-800 shadow-2xs"
+                    ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 shadow-2xs"
                     : "border-input bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon className="h-3 w-3" />
                 {prof.label}
-                {isActive && <CheckCircle2 className="h-3 w-3 text-brand-700 ml-0.5" />}
+                {isActive && <CheckCircle2 className="h-3 w-3 text-emerald-500 ml-0.5" />}
               </button>
             )
           })}
@@ -161,9 +161,9 @@ export function ExploreView({
                 key={cat.label}
                 onClick={() => setSelectedCategory(cat.label)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition cursor-pointer",
                   isSel
-                    ? "bg-brand-900 text-white shadow-2xs"
+                    ? "bg-emerald-600 text-white shadow-2xs"
                     : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border",
                 )}
               >
@@ -175,7 +175,7 @@ export function ExploreView({
         </div>
 
         <span className="text-[12px] font-bold text-muted-foreground">
-          Showing <span className="text-brand-900 font-extrabold">{finalPlaces.length}</span> destinations from Local API
+          Showing <span className="text-emerald-500 font-extrabold">{finalPlaces.length}</span> destinations from Local API
         </span>
       </div>
 
@@ -185,13 +185,13 @@ export function ExploreView({
           <div
             key={place.id}
             onClick={() => handleSelectPlace(place.id)}
-            className="group cursor-pointer flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition hover:border-brand-600 hover:shadow-xs"
+            className="group cursor-pointer flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition hover:border-emerald-500 hover:shadow-xs"
           >
             <div
               className="relative h-[160px] w-full bg-cover bg-center"
               style={{ backgroundImage: `url('${place.imageUrl}')` }}
             >
-              <span className="absolute left-2 top-2 rounded-md bg-brand-900 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-xs">
+              <span className="absolute left-2 top-2 rounded-md bg-emerald-900/90 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-xs backdrop-blur-xs">
                 {place.subCategory || place.category}
               </span>
               <span className="absolute right-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-xs">
@@ -201,7 +201,7 @@ export function ExploreView({
 
             <div className="flex flex-1 flex-col p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-[15px] font-bold text-foreground group-hover:text-brand-700 leading-tight">
+                <h3 className="text-[15px] font-bold text-foreground group-hover:text-emerald-500 leading-tight">
                   {place.name}
                 </h3>
                 <div className="flex items-center gap-1 text-[12px] font-extrabold text-[#e0a30b] shrink-0">
@@ -217,16 +217,16 @@ export function ExploreView({
 
               {/* Accessibility Profile Pill Badges */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="rounded-md bg-brand-50 px-2 py-0.5 text-[10.5px] font-bold text-brand-800 capitalize">
+                <span className="rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-300 capitalize">
                   {place.accessibility.mobility} access
                 </span>
                 {place.accessibility.visual && (
-                  <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-800">
+                  <span className="rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-300">
                     Visual Guide
                   </span>
                 )}
                 {place.accessibility.facilities && (
-                  <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10.5px] font-semibold text-blue-800">
+                  <span className="rounded-md bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-sky-600 dark:text-sky-300">
                     Facilities
                   </span>
                 )}
@@ -236,7 +236,7 @@ export function ExploreView({
                 <span className="font-semibold text-muted-foreground">
                   Entry: <b className="text-foreground">{place.entryPrice || "USD 10"}</b>
                 </span>
-                <span className="font-bold text-brand-700 group-hover:underline flex items-center gap-0.5">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 group-hover:underline flex items-center gap-0.5">
                   View Details →
                 </span>
               </div>

@@ -15,6 +15,7 @@ import { AdminView } from "@/components/zimtour/admin-view"
 import { ProviderView } from "@/components/zimtour/provider-view"
 import { ContributorView } from "@/components/zimtour/contributor-view"
 import { TranslateView } from "@/components/zimtour/translate-view"
+import { AboutView } from "@/components/zimtour/about-view"
 import { FullScreenMapModal } from "@/components/zimtour/full-screen-map-modal"
 import { setSelectedPlaceId, setUserRole } from "@/lib/zimtour-store"
 import type { View } from "@/components/zimtour/types"
@@ -125,6 +126,7 @@ export default function Page() {
               {view === "listing" && <ListingView onNavigate={setView} />}
               {view === "bookings" && <BookingsView onNavigate={setView} />}
               {view === "settings" && <SettingsView onNavigate={setView} />}
+              {view === "about" && <AboutView onNavigate={setView} />}
               {view === "admin" && <AdminView onNavigate={setView} />}
               {(view === "provider" || view.startsWith("provider-")) && (
                 <ProviderView activeSubView={view} onNavigate={setView} />

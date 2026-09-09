@@ -1,8 +1,9 @@
 "use client"
 
-import { Search, MapPin, Bell, Menu, Globe, ChevronDown, UserCheck, ShieldCheck } from "lucide-react"
+import { Search, MapPin, Bell, Menu, Globe, ChevronDown, UserCheck, ShieldCheck, Sun, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useZimTourStore, LANGUAGE_OPTIONS, setSelectedLanguage } from "@/lib/zimtour-store"
+import { useTheme } from "@/hooks/useTheme"
 import type { View } from "./types"
 
 const VIEW_TITLES: Record<View, string> = {
@@ -21,6 +22,7 @@ const VIEW_TITLES: Record<View, string> = {
   "provider-verification": "ZTA Verification Vault",
   contributor: "Community & Heritage Hub",
   translate: "Global Language Translator",
+  about: "About Zimbabwe",
 }
 
 const VIEW_SUBTITLES: Partial<Record<View, string>> = {
@@ -36,6 +38,7 @@ const VIEW_SUBTITLES: Partial<Record<View, string>> = {
   "provider-verification": "Upload ZTA licenses, health permits & regulatory documents.",
   contributor: "Document traditional heritage, oral history and community stories.",
   translate: "Embedded Google Translate webview for tourists, local guides & vendors.",
+  about: "Discover the heritage, natural wonders, and tourism intelligence of Zimbabwe.",
 }
 
 export function TopBar({
@@ -50,9 +53,14 @@ export function TopBar({
   onOpenLocationMap?: () => void
 }) {
   const store = useZimTourStore()
+  const { theme, toggleTheme } = useTheme()
   const isAI = active === "ai"
   const isHome = active === "home"
   const isAuth = active === "auth"
+  const isBookings = active === "bookings"
+  const isTranslate = active === "translate"
+  const isAbout = active === "about"
+  const hideHeaderSearch = isHome || isAI || isBookings || isTranslate || isAbout
 
   return (
     <header className="flex h-[62px] shrink-0 items-center gap-4 border-b border-border bg-card/80 px-5 backdrop-blur-sm">
@@ -79,17 +87,13 @@ export function TopBar({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search — hidden on home (hero has its own) */}
-      {!isHome && (
+      {/* Search — hidden on home, ai, bookings, and live translate tabs */}
+      {!hideHeaderSearch && (
         <div className="hidden min-w-0 max-w-[340px] flex-1 items-center gap-2 rounded-[10px] border border-input bg-background px-3.5 py-2 text-[13.5px] text-muted-foreground md:flex">
           <Search className="h-4 w-4 shrink-0" />
           <input
             className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-            placeholder={
-              isAI
-                ? "Ask anything about Zimbabwe…"
-                : "Search places, activities, services…"
-            }
+            placeholder="Search places, activities, services…"
           />
         </div>
       )}
@@ -98,7 +102,7 @@ export function TopBar({
       {!isHome && (
         <button
           onClick={onOpenLocationMap}
-          className="hidden items-center gap-2 rounded-[10px] border border-input bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-brand-50 md:flex cursor-pointer"
+          className="hidden items-center gap-2 rounded-[10px] border border-input bg-card px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted md:flex cursor-pointer"
         >
           <MapPin className="h-4 w-4 text-brand-600 animate-bounce-slow" />
           My Location
@@ -115,7 +119,7 @@ export function TopBar({
             className="bg-transparent font-semibold text-foreground outline-none cursor-pointer text-xs pr-1"
           >
             {LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.id} value={lang.id}>
+              <option key={lang.id} value={lang.id} className="bg-popover text-popover-foreground dark:bg-[#181a1f] dark:text-white">
                 {lang.flag} {lang.label}
               </option>
             ))}
@@ -123,8 +127,21 @@ export function TopBar({
         </div>
       )}
 
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-input bg-card text-foreground transition-colors hover:bg-muted cursor-pointer"
+        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {theme === "dark" ? (
+          <Sun className="h-4 w-4 text-amber-500" />
+        ) : (
+          <Moon className="h-4 w-4" />
+        )}
+      </button>
+
       {/* Bell */}
-      <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-input bg-card text-foreground transition-colors hover:bg-brand-50">
+      <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-input bg-card text-foreground transition-colors hover:bg-muted cursor-pointer">
         <Bell className="h-4 w-4" />
         <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
           2
@@ -145,11 +162,11 @@ export function TopBar({
       {!isAuth && active !== "admin" && onNavigate && (
         <button
           onClick={() => onNavigate("auth")}
-          className="hidden sm:flex items-center gap-2 rounded-[10px] border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[12.5px] font-bold text-emerald-900 shadow-2xs transition hover:bg-emerald-100"
+          className="hidden sm:flex items-center gap-2 rounded-[10px] border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[12.5px] font-bold text-emerald-600 dark:text-emerald-300 shadow-2xs transition hover:bg-emerald-500/20 cursor-pointer"
         >
-          <UserCheck className="h-4 w-4 text-emerald-700" />
+          <UserCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span className="capitalize">{store.userRole} Role</span>
-          <span className="text-[10px] font-semibold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
+          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-background px-1.5 py-0.5 rounded border border-emerald-500/30">
             Switch
           </span>
         </button>
