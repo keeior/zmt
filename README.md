@@ -1,33 +1,80 @@
-# zimtour
+# ZimTour
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+A Zimbabwe travel, stay, and discovery platform designed to help users explore destinations, compare stays, and move through a richer local travel experience.
 
-## Built with v0
+ZimTour is a product-style travel application created to showcase how a destination platform can combine booking, discovery, local listings, and AI-assisted trip guidance in a single experience.
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## What this project includes
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_OouH1613vxKVx6GAUrPVLKmPSDy8)
+- travel discovery and exploration experience
+- accommodation and listing views
+- local destination browsing
+- provider and admin dashboards
+- user role switching for different journey types
+- AI-focused travel assistance interface
+- map-driven exploration experience
 
-## Getting Started
+## Product vision
 
-First, run the development server:
+The platform is built around a practical idea: travelers should be able to discover places, compare options, and understand local offerings without friction. The experience blends browsing, booking logic, and contextual assistance in a way that feels like a real travel product rather than a mockup.
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- shadcn/ui patterns
+- Leaflet / map integrations
+- OpenAI / Groq / Google GenAI integrations
+- Recharts for analytics views
+- Lucide React icons
+
+## Key app flows
+
+- Auth and onboarding
+- Home / Explore / Listings
+- Provider dashboard
+- Admin dashboard
+- AI assistant and travel help views
+- Booking and settings experiences
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Then open:
+
+```bash
+http://localhost:3000
+```
+
+## Scripts
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npm run build
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+app/
+components/
+hooks/
+lib/
+types/
+public/
+```
 
-## Learn More
+## Status
 
-To learn more, take a look at the following resources:
+This is a product-focused prototype / portfolio project designed to demonstrate product thinking, UI craft, map-driven UX, and AI-assisted travel experiences.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## Notes
+
+The repository reflects a real product direction for a Zimbabwe travel platform and is structured to be extended into a more complete marketplace or travel assistant.
