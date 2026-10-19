@@ -36,6 +36,7 @@ import {
   ShoppingBag,
   Compass,
   Leaf,
+  BriefcaseBusiness,
 } from "lucide-react"
 import {
   useZimTourStore,
@@ -644,6 +645,33 @@ export function ListingView({ onNavigate }: { onNavigate: (v: View) => void }) {
               </div>
             </div>
           </div>
+
+          {place.hiringStatus?.isHiring && (
+            <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+                  <BriefcaseBusiness className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[14px] font-extrabold text-amber-950">We&apos;re hiring</h3>
+                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900">Open opportunity</span>
+                  </div>
+                  <p className="mt-1 text-[12px] font-bold text-amber-950">{place.hiringStatus.title}</p>
+                  <p className="mt-1 text-[11.5px] leading-relaxed text-amber-900/80">{place.hiringStatus.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {place.hiringStatus.tags.map((tag) => (
+                      <span key={tag} className="rounded-md border border-amber-200 bg-white/70 px-2 py-1 text-[10px] font-semibold text-amber-900">{tag}</span>
+                    ))}
+                  </div>
+                  <a href={place.hiringStatus.applyingLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-800 px-3 py-2 text-[11px] font-extrabold text-white hover:bg-amber-700">
+                    Apply Now
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ── Reviews Button ── */}
           <button
