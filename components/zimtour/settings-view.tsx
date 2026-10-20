@@ -16,6 +16,8 @@ import {
   Utensils,
   Compass,
   MessageSquare,
+  BriefcaseBusiness,
+  ExternalLink,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PageHead, LocationBell } from "./page-head"
@@ -27,11 +29,13 @@ import {
   LANGUAGE_OPTIONS,
   type SupportedLanguage,
   type AIPreferences,
+  setProviderHiring,
 } from "@/lib/zimtour-store"
 import type { View } from "./types"
 
 const SECTIONS = [
   { id: "profile", icon: User, label: "Profile" },
+  { id: "hiring", icon: BriefcaseBusiness, label: "Hiring & Opportunities" },
   { id: "ai-prefs", icon: Bot, label: "AI & Travel Preferences" },
   { id: "language", icon: Globe, label: "Language & Region" },
   { id: "accessibility", icon: Accessibility, label: "Accessibility" },
@@ -80,7 +84,7 @@ export function SettingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[240px_1fr]">
         {/* Sidebar Navigation */}
         <nav className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-2.5 shadow-xs lg:h-fit">
-          {SECTIONS.map((s) => {
+          {SECTIONS.filter((s) => s.id !== "hiring" || store.userRole === "provider").map((s) => {
             const Icon = s.icon
             const on = active === s.id
             return (
@@ -105,6 +109,7 @@ export function SettingsView({ onNavigate }: { onNavigate: (v: View) => void }) 
         {/* Settings Detail Panel */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
           {active === "profile" && <ProfilePanel />}
+          {active === "hiring" && store.userRole === "provider" && <HiringPanel />}
           {active === "ai-prefs" && <AIPrefsPanel />}
           {active === "language" && <LanguagePanel />}
           {active === "accessibility" && (
@@ -175,6 +180,34 @@ function ProfilePanel() {
       </div>
     </div>
   )
+}
+
+function HiringPanel() {
+  const store = useZimTourStore()
+  const hiring = store.providerHiring
+
+  return (
+    <div className="space-y-6">
+      <PanelHead title="Hiring & Opportunities" desc="Publish open roles on your listing so visitors can discover and apply." />
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+        <label className="flex items-center justify-between gap-4">
+          <span><span className="block text-sm font-extrabold text-foreground">Show hiring status</span><span className="mt-1 block text-xs text-muted-foreground">Visitors will see this on your public listing.</span></span>
+          <button type="button" role="switch" aria-checked={hiring.isHiring} onClick={() => setProviderHiring({ isHiring: !hiring.isHiring })} className={cn("relative h-6 w-11 rounded-full transition-colors", hiring.isHiring ? "bg-emerald-600" : "bg-muted border border-border")}><span className={cn("absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all", hiring.isHiring ? "left-6" : "left-1")} /></button>
+        </label>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <EditableHiringField label="Role or team name" value={hiring.title} onChange={(title) => setProviderHiring({ title })} />
+        <EditableHiringField label="Application link" value={hiring.applyingLink} onChange={(applyingLink) => setProviderHiring({ applyingLink })} />
+      </div>
+      <label className="block space-y-1.5"><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</span><textarea rows={4} value={hiring.description} onChange={(e) => setProviderHiring({ description: e.target.value })} className="w-full rounded-xl border border-input bg-background p-3 text-xs text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" /></label>
+      <label className="block space-y-1.5"><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tags</span><input value={hiring.tags.join(", ")} onChange={(e) => setProviderHiring({ tags: e.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" placeholder="Full-time, Local guides, Masvingo" /></label>
+      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><ExternalLink className="h-3 w-3" /> Changes appear on the tourist listing immediately.</p>
+    </div>
+  )
+}
+
+function EditableHiringField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <label className="block space-y-1.5"><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span><input value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" /></label>
 }
 
 function AIPrefsPanel() {

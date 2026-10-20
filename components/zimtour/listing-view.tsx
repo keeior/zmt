@@ -36,6 +36,7 @@ import {
   ShoppingBag,
   Compass,
   Leaf,
+  BriefcaseBusiness,
 } from "lucide-react"
 import {
   useZimTourStore,
@@ -96,7 +97,8 @@ export function ListingView({ onNavigate }: { onNavigate: (v: View) => void }) {
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState("")
 
   // Fetch from Local API
-  const place = apiGetPlaceById(store.selectedPlaceId)
+  const basePlace = apiGetPlaceById(store.selectedPlaceId)
+  const place = basePlace.id === "great-zimbabwe" ? { ...basePlace, hiringStatus: store.providerHiring } : basePlace
   const [reviewsList, setReviewsList] = useState<ReviewItem[]>(() => apiGetPlaceReviews(place.id))
   const nearbyPlaces = apiGetConnectedNearby(place.id, nearbyTab, 4)
   const practical = apiGetPracticalInfo(place)
@@ -644,6 +646,33 @@ export function ListingView({ onNavigate }: { onNavigate: (v: View) => void }) {
               </div>
             </div>
           </div>
+
+          {place.hiringStatus?.isHiring && (
+            <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <BriefcaseBusiness className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[14px] font-extrabold text-foreground">We&apos;re hiring</h3>
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Open opportunity</span>
+                  </div>
+                  <p className="mt-1 text-[12px] font-bold text-foreground">{place.hiringStatus.title}</p>
+                  <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">{place.hiringStatus.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {place.hiringStatus.tags.map((tag) => (
+                      <span key={tag} className="rounded-md border border-border bg-background/70 px-2 py-1 text-[10px] font-semibold text-muted-foreground">{tag}</span>
+                    ))}
+                  </div>
+                  <a href={place.hiringStatus.applyingLink} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-extrabold text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600">
+                    Apply Now
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ── Reviews Button ── */}
           <button

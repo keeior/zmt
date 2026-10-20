@@ -565,6 +565,13 @@ export type StoreState = {
   userRole: UserRole
   providerVerified: boolean
   verifiedCategory: string | null
+  providerHiring: {
+    isHiring: boolean
+    title: string
+    description: string
+    tags: string[]
+    applyingLink: string
+  }
 
   // Dynamic Demo Data Loop Counters
   totalVisitors: number
@@ -598,6 +605,13 @@ let globalState: StoreState = {
   userRole: "tourist",
   providerVerified: false,
   verifiedCategory: "places",
+  providerHiring: {
+    isHiring: true,
+    title: "Heritage Guides & Visitor Hosts",
+    description: "Join our community-led team sharing Great Zimbabwe's living history with visitors from around the world.",
+    tags: ["Local guides", "Full-time", "Masvingo"],
+    applyingLink: "https://example.com/apply/great-zimbabwe",
+  },
 
   totalVisitors: 24821,
   avgStayNights: 3.4,
@@ -698,6 +712,11 @@ export function recordUserBooking(placeOrExperienceName: string) {
     activityTrend: newTrend,
     recentActivities: [newActivity, ...globalState.recentActivities.slice(0, 4)],
   }
+  emit()
+}
+
+export function setProviderHiring(hiring: Partial<StoreState["providerHiring"]>) {
+  globalState = { ...globalState, providerHiring: { ...globalState.providerHiring, ...hiring } }
   emit()
 }
 

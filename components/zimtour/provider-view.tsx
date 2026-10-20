@@ -31,6 +31,7 @@ import {
   Volume2,
   Globe,
   Share2,
+  BriefcaseBusiness,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -584,6 +585,19 @@ export function ProviderView({
                     <p className="text-[11.5px] text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="h-3 w-3" /> {item.location} · {item.entryPrice}
                     </p>
+                    {item.hiringStatus?.isHiring && (
+                      <div className="mt-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-amber-800">
+                          <BriefcaseBusiness className="h-3.5 w-3.5" /> We&apos;re hiring
+                        </div>
+                        <p className="mt-0.5 text-[11px] font-bold text-foreground">{item.hiringStatus.title}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {item.hiringStatus.tags.map((tag) => (
+                            <span key={tag} className="rounded bg-background px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-border/60">

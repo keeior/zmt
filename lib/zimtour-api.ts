@@ -63,7 +63,33 @@ export type PlaceDetail = {
     lastVerified: string
   }
   reviewsList: ReviewItem[]
+  hiringStatus?: HiringStatus
   indigenousNarrative?: IndigenousStory
+}
+
+export type HiringStatus = {
+  isHiring: boolean
+  title: string
+  description: string
+  tags: string[]
+  applyingLink: string
+}
+
+export const PROVIDER_HIRING_STATUS: Record<string, HiringStatus> = {
+  "great-zimbabwe": {
+    isHiring: true,
+    title: "Heritage Guides & Visitor Hosts",
+    description: "Join our community-led team sharing Great Zimbabwe's living history with visitors from around the world.",
+    tags: ["Local guides", "Full-time", "Masvingo"],
+    applyingLink: "https://example.com/apply/great-zimbabwe",
+  },
+  "lake-mutirikwi": {
+    isHiring: true,
+    title: "Lodge Hospitality Team",
+    description: "We are looking for warm, reliable people to support our lakeside lodge and guest experience team.",
+    tags: ["Hospitality", "Seasonal", "Mutirikwi"],
+    applyingLink: "https://example.com/apply/lake-mutirikwi",
+  },
 }
 
 export type IndigenousStory = {
@@ -2028,7 +2054,8 @@ export function apiGetPlacesWithCalculatedDistances(
 }
 
 export function apiGetPlaceById(id: string): PlaceDetail {
-  return MASTER_DATASET.find((p) => p.id === id) || MASTER_DATASET[0]
+  const place = MASTER_DATASET.find((p) => p.id === id) || MASTER_DATASET[0]
+  return { ...place, hiringStatus: PROVIDER_HIRING_STATUS[place.id] }
 }
 
 export function apiGetPlaceReviews(id: string): ReviewItem[] {
